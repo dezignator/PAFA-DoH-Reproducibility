@@ -1,6 +1,38 @@
+<!--
+LICENSE — PAFA-DoH Reproducibility Artifact
+Companion to README.md and REPRODUCIBILITY_CHECKLIST.md
+Thesis chapter: Chapter 4 (PAFA-DoH)
+Citation DOI: 10.1016/j.neunet.2025.108343  (Neural Networks, April 2026)
+
+────────────────────────────────────────────────────────────────────
+BEFORE MAKING THIS REPOSITORY PUBLIC, REPLACE THE PLACEHOLDER
+[COPYRIGHT HOLDER — TO BE FILLED IN BEFORE PUBLIC RELEASE]
+IN THE COPYRIGHT LINE BELOW WITH THE LEGAL COPYRIGHT HOLDER.
+
+The thesis is currently under blind review; the author's name is
+therefore not present anywhere else in this artifact. This LICENSE
+file is the only place where the copyright holder must be entered.
+The recommended form is:
+
+    Copyright (c) 2026 <Full Legal Name>
+
+or, if the thesis is institution-owned:
+
+    Copyright (c) 2026 <Institution Name>
+
+The SPDX identifier for this file is: MIT
+
+Do NOT change the canonical MIT grant paragraph. GitHub's license
+detector (licensee) matches on the exact MIT text, and any
+modification will cause the repository badge to fall back to
+"Unknown license". Scope notes belong AFTER the canonical text, in
+the "Scope note" section below, not inside the grant.
+────────────────────────────────────────────────────────────────────
+-->
+
 MIT License
 
-Copyright (c) 2026 dezignator
+Copyright (c) 2026 [COPYRIGHT HOLDER — TO BE FILLED IN BEFORE PUBLIC RELEASE]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +51,142 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Scope note
+
+*This section is informational. It does not modify the MIT grant above; it
+clarifies which files in this repository the MIT grant is intended to apply
+to, and which files carry a different license because they originate from a
+third party.*
+
+This repository contains two categories of material: **source code** (MIT)
+and **data files** (CC-BY 4.0). It also references two **proprietary
+hardware platforms** (Intel Loihi 2 and NVIDIA A100) and a set of
+**third-party Python packages**, none of which are covered by the MIT
+grant in this file. The subsections below state the category of each
+file and directory in the repository.
+
+### 1. Covered by the MIT grant
+
+The MIT grant above applies to the following files and directories in
+this repository.
+
+| Path | Category | Notes |
+|---|---|---|
+| `src/**` | Source code | Models, utilities, CLI tools, hardware simulators |
+| `configs/**` | Configuration | All YAML configuration files |
+| `scripts/**` | Source code | Training, evaluation, table and figure reproduction |
+| `tests/**` | Source code | Unit tests, end-to-end tests, CLI replay tests |
+| `expected_outputs/**` | Source code and metadata | Expected-output JSON and CSV, verification script, README |
+| `data/*.py` | Source code | Dataset download, preprocessing, splitting, toy generator |
+| `data/CHECKSUMS.txt` | Metadata | SHA-256 checksums; factual, not copyrightable |
+| `data/README_data.md`, `data/README.md` | Documentation | Data documentation |
+| `src/hardware_simulation/README_hardware.md` | Documentation | Hardware simulator documentation |
+| `README.md`, `REPRODUCIBILITY_CHECKLIST.md` | Documentation | Top-level documentation |
+| `requirements.txt`, `environment.yml` | Configuration | Pinned dependency list |
+| `Dockerfile`, `setup.py`, `.gitignore` | Configuration | Build and packaging configuration |
+
+**Attribution requirement.** Under the MIT grant, any copy or
+substantial portion of the Software must include the copyright notice
+and this permission notice. For a downstream research artifact, the
+recommended attribution line is:
+
+```
+Portions of this work are derived from the PAFA-DoH Reproducibility
+Artifact (Chapter 4 of the thesis), licensed under the MIT License.
+```
+
+The citation DOI for the underlying chapter is
+`10.1016/j.neunet.2025.108343` (Neural Networks, April 2026).
+
+### 2. Not covered — datasets (CC-BY 4.0)
+
+The following data files are **not** covered by the MIT grant. They are
+redistributed under, or are governed by, the Creative Commons
+Attribution 4.0 International (CC-BY 4.0) license, or are excluded from
+this repository entirely.
+
+| Dataset | License | Status in this repository |
+|---|---|---|
+| **Zenodo DoH corpus** — DOI [`10.5281/zenodo.5957677`](https://doi.org/10.5281/zenodo.5957677) (≈ 32 GB) | CC-BY 4.0 | **Not redistributed.** Fetched by `data/download_datasets.py` from the canonical DOI at runtime. |
+| **CIC-DoH2023** — [`https://www.unb.ca/cic/datasets/dohbrw-2023.html`](https://www.unb.ca/cic/datasets/dohbrw-2023.html) (≈ 2.5 GB) | CC-BY 4.0 | **Not redistributed.** Fetched by `data/download_datasets.py` from the canonical URL at runtime. |
+| **Toy dataset** — `data/toy_dataset/benign_sample.csv`, `data/toy_dataset/malicious_sample.csv` | CC-BY 4.0 | **Redistributed header-only.** The committed files contain only the 47-column schema header, no data rows. The full toy dataset is regenerated in place by `data/make_toy_dataset.py --mode synthetic --seed 42` and is a CC-BY 4.0 derivative of the Zenodo corpus. |
+| **Generated outputs** — `outputs/**` | Depends on the generation command | Not committed. `outputs/tables/*.json` and `outputs/figures/*` reproduce Table 13–17 and Figures 7–10 of the chapter. If redistributed, they should carry the same MIT or CC-BY 4.0 status as the inputs they were generated from. |
+
+Any downstream redistribution of the toy dataset, of generated
+outputs derived from the Zenodo corpus or CIC-DoH2023, or of any
+transformed version of those datasets must:
+
+1. Preserve the CC-BY 4.0 attribution to the upstream dataset (a link
+   to the DOI or URL is sufficient).
+2. Preserve the CC-BY 4.0 notice alongside the data.
+3. Not apply the MIT grant of this repository to those data files.
+   The MIT grant is not a sublicense of the upstream data.
+
+### 3. Not covered — proprietary hardware
+
+The following hardware platforms are referenced by the artifact but
+are **not** redistributed, emulated on bare metal, or sublicensed by
+this repository.
+
+| Hardware | Referenced in thesis | Status in this repository |
+|---|---|---|
+| **Intel Loihi 2** | §4.24.1 (128 neuromorphic cores × 1,024 LIF neurons = 128,000 neurons, 128 M synapses) | Proprietary Intel hardware. Not included, not emulated on bare metal. The reported 0.8 ms latency and 0.12 mJ / inference are reproduced by the calibrated software simulator `src/hardware_simulation/loihi_mock.py` within ±20 % / ±25 %, as documented in `REPRODUCIBILITY_CHECKLIST.md` §5. |
+| **NVIDIA A100** | §4.24.1 (6,912 CUDA cores, 40 GB HBM; used as a comparison baseline in Table 13) | Proprietary NVIDIA hardware. Not included. The reported 2.1 ms latency and 1.8 mJ / inference are reproduced by `src/hardware_simulation/a100_emulation.py` within ±20 % / ±25 %. |
+| **ChipWhisperer** | §4.26.3 (side-channel SNR measurement) | Proprietary NewAE Technology hardware. Not included. The SNN-guided noise injector is shipped (`src/models/ai_obfuscated_crypto.py`); the ChipWhisperer trace-acquisition step is not. |
+| **IBM TrueNorth** | §4.24.1 — **mentioned only for comparison, not used in any reported experiment.** | Not included, not simulated, not measured. See `src/hardware_simulation/README_hardware.md` for the explicit non-use statement. |
+
+The software simulators under `src/hardware_simulation/` are original
+code, licensed under the MIT grant in this file. They emulate the
+*reported numeric behaviour* of the hardware within the stated
+tolerance; they do **not** emulate the hardware architecture, the
+hardware instruction set, or any proprietary Intel, NVIDIA, NewAE or
+IBM technology, and they do not imply any endorsement by those
+vendors.
+
+### 4. Not covered — third-party Python packages
+
+This artifact depends on packages whose licenses are independent of
+this file. The pinned list is in `requirements.txt` and
+`environment.yml`. Each package retains its own upstream license,
+which is available from the package's source repository or its PyPI
+/ conda-forge listing. The principal dependencies and their typical
+upstream license families are:
+
+| Package | Typical upstream license | Used for |
+|---|---|---|
+| `numpy`, `scipy`, `pandas`, `scikit-learn` | BSD-3-Clause | Numerical and data handling |
+| `torch`, `torchvision`, `torchaudio` | BSD-3-Clause | Neural networks, federated training |
+| `gudhi`, `ripser`, `persim` | MIT | Topological data analysis |
+| `snntorch`, `brian2` | MIT / CeCILL-2.1 (brian2 upstream) | Spiking neural networks |
+| `py_ecc` | MIT | BN128 pairing group for the Groth16 reference |
+| `networkx` | BSD-3-Clause | Graph operations |
+| `matplotlib`, `seaborn`, `graphviz` | PSF / BSD / EPL (graphviz binary) | Figure rendering |
+| `PyYAML`, `requests`, `dask` | MIT / Apache-2.0 / BSD-3-Clause | Configuration, download, parallel preprocessing |
+
+The user is responsible for compliance with each upstream license.
+This file does not relicense, sublicense, or extend those packages.
+
+### 5. Trademark notice
+
+"Intel" and "Loihi" are trademarks of Intel Corporation. "NVIDIA" and
+"A100" are trademarks of NVIDIA Corporation. "IBM" and "TrueNorth" are
+trademarks of International Business Machines Corporation.
+"ChipWhisperer" is a trademark of NewAE Technology Inc. All other
+product names, logos and brands are the property of their respective
+owners.
+
+Use of these names in this artifact is descriptive only: it identifies
+the hardware platform against which the PAFA-DoH framework was
+evaluated in Chapter 4. It does not imply affiliation with,
+endorsement by, or sponsorship from any of these vendors.
+
+### 6. Contact
+
+For licensing questions, or to request a different license for a
+specific downstream use, open a GitHub issue on this repository and
+include the phrase "LICENSE" in the issue title. For questions about
+the underlying chapter, use the citation DOI
+`10.1016/j.neunet.2025.108343`.
