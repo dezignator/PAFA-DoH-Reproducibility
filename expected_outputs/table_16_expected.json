@@ -1,0 +1,31 @@
+{
+  "global_model_accuracy_pct": 99.4,
+  "global_model_accuracy_ci_95_pct": 0.12,
+  "dp_epsilon": 1.2,
+  "dp_delta": 1e-05,
+  "dp_clipping_norm": 3.5,
+  "model_utility_pct": 98.7,
+  "convergence_epochs": 8,
+  "convergence_epochs_target": 10,
+  "client_dropout_resilience_pct": 97.3,
+  "client_dropout_tested_pct": 20,
+  "adversarial_robustness_pct": 96.8,
+  "targets": {
+    "global_model_accuracy_pct": 99.4,
+    "dp_epsilon": 1.5,
+    "convergence_epochs": 10,
+    "client_dropout_resilience_pct": 95.0,
+    "adversarial_robustness_pct": 95.0
+  },
+  "statistical_tests": {
+    "accuracy": "Welch's t-test, p < 0.01",
+    "privacy": "KL divergence, p < 0.05",
+    "convergence": "Kolmogorov-Smirnov, p < 0.05",
+    "dropout": "Chi-squared, p < 0.01",
+    "adversarial": "Mann-Whitney U-test, p < 0.01"
+  },
+  "notes": {
+    "source": "Table 16, Chapter 4, Section 4.28.1",
+    "toy_mode_warning": "Toy mode produces ~99.5% accuracy on the 400-row test split (2000 toy rows × 20%); the ±0.12% CI requires millions of rows from the full 32 GB corpus. Verification skips the CI field in toy mode (see REPRODUCIBILITY_CHECKLIST.md Section 9)."
+  }
+}
