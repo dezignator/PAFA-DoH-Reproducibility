@@ -1,0 +1,19 @@
+{
+  "proof_generation_ms": 432.0,
+  "proof_verification_ms": 78.0,
+  "proof_size_kb": 1.8,
+  "soundness_error": "2^-132",
+  "soundness_error_numeric": 1.8346e-40,
+  "targets": {
+    "proof_generation_ms": 500,
+    "proof_verification_ms": 100,
+    "proof_size_kb": 2.0,
+    "soundness_error": "2^-128"
+  },
+  "notes": {
+    "group": "BN128 (pairing-friendly curve)",
+    "constraint_count": 100000,
+    "source": "Table 15, Chapter 4, Sections 4.17-4.18, 4.23, 4.29",
+    "assumption": "Groth16 soundness rests on the q-SDH-type assumption in the pairing-friendly elliptic-curve group, together with the Fiat-Shamir transformation in the random-oracle model. Not an unconditional forgery-resistance claim."
+  }
+}
