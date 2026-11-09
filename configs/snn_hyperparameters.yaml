@@ -1,0 +1,119 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# snn_hyperparameters.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   configs/default_pafa_config.yaml    (File 9, master config)
+#   README.md, REPRODUCIBILITY_CHECKLIST.md, LICENSE
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343
+# License:        MIT
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# Configures the spiking-neural-network detector of PAFA-DoH. Consumed by:
+#
+#   src/models/snn_detector.py            (File 12c)
+#   src/utils/math_utils.py               (File 11f) — Eqs. 43, 44, 45, 46
+#   src/hardware_simulation/loihi_mock.py (File 16b) — target calibration
+#   src/cli_tools/snn_cli.py              (File 15c)
+#   scripts/reproduce_tables/table_13_neuromorphic.py (File 18a)
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Where each value comes from in the chapter
+# ───────────────────────────────────────────────────────────────────────────
+#   spike_encoding.{tau,alpha,N} → §4.9.1, Eq. 43 (log-burst encoding)
+#   lif.*                        → §4.10, Eqs. 44–45 (LIF neuron)
+#   stdp.tau_{plus,minus}_ms     → §4.11, Eq. 46, and the text
+#                                  ("τ+ = τ− = 20 ms" — §4.11)
+#   lateral_inhibition.*         → §4.10 (hidden-layer lateral inhibition)
+#   loihi_2.{latency,energy,eff} → Table 13
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+
+
+# ─── Log-burst spike encoding ─────────────────────────────────────────────
+# §4.9.1, Eq. 43. Each packet p_i is represented by a burst of N_i
+# spikes whose inter-spike interval increases logarithmically with
+# ||p_i||². The interval and the burst size together carry the packet's
+# feature magnitude. Values are configuration, not results, per §4.9.1
+# ("The values of τ, α and N_i are configuration parameters ... not
+# results of the chapter.").
+spike_encoding:
+  tau: 0.01                    # [default] τ (ms) in Eq. 43. Fixed
+                               #           temporal resolution; documented
+                               #           in §4.9.1 as a configuration
+                               #           parameter.
+  alpha: 1.0                   # [default] α in Eq. 43. Controls the
+                               #           logarithmic burst interval
+                               #           scaling.
+  spikes_per_packet: 5         # [default] N_i in Eq. 43. The committed
+                               #           expected outputs were produced
+                               #           with 5 spikes per packet.
+
+
+# ─── Leaky integrate-and-fire neuron ─────────────────────────────────────
+# §4.10, Eqs. 44–45. Standard LIF neuron; the artifact applies the
+# published model and does not propose a new neuron. The values below
+# are the standard LIF constants used in the reported results.
+lif:
+  membrane_time_constant_ms: 20.0
+                               # [default] τ_m in Eq. 44.
+  resting_potential_mv: 0.0    # [default] V_rest.
+  threshold_mv: 1.0            # [default] V_th.
+  reset_mv: 0.0                # [default] V_reset.
+  refractory_ms: 2.0           # [default] τ_ref.
+  noise_sigma: 0.1             # [default] σ_noise in Eq. 44. The
+                               #           noise term ξ(t) is part of the
+                               #           standard LIF and is included
+                               #           in the committed expected
+                               #           outputs; removing it changes
+                               #           the reported spike count.
+
+
+# ─── Spike-timing-dependent plasticity ────────────────────────────────────
+# §4.11, Eq. 46. Standard pair-based STDP rule. §4.11 states that
+# τ+ = τ− = 20 ms. The remaining constants are configuration.
+stdp:
+  tau_plus_ms: 20.0            # [thesis] §4.11.
+  tau_minus_ms: 20.0           # [thesis] §4.11.
+  learning_rate: 0.01          # [default] η in Eq. 46.
+  weight_bound_min: 0.0        # [default] Lower bound on w_ij after each
+                               #           update.
+  weight_bound_max: 1.0        # [default] Upper bound on w_ij.
+
+
+# ─── Hidden-layer lateral inhibition ─────────────────────────────────────
+# §4.10. A firing neuron suppresses its neighbors within a fixed radius
+# on the hidden-layer grid. Both constants are configuration parameters
+# of the hidden layer, not results.
+lateral_inhibition:
+  radius: 3                    # [default] Neighbor radius on the hidden
+                               #           grid.
+  coefficient: 0.5             # [default] Inhibition strength.
+
+
+# ─── Loihi-2 target values ───────────────────────────────────────────────
+# Table 13. These are the reported values, not simulator outputs. The
+# simulator in File 16b reads them and compares its own output against
+# them. See REPRODUCIBILITY_CHECKLIST.md §5 for the tolerances.
+loihi_2:
+  inference_latency_ms: 0.8    # [thesis] Table 13.
+  energy_per_inference_mj: 0.12
+                               # [thesis] Table 13.
+  spike_encoding_efficiency: 0.45
+                               # [thesis] Table 13 (bits/spike).
+
+
+# ─── Seed ────────────────────────────────────────────────────────────────
+seed:
+  snn_seed: 42                 # [default] Must equal
+                               #           default_pafa_config.yaml::seed.
+                               #           Consumed by the SNN trainer in
+                               #           File 12c for weight
+                               #           initialization and for the
+                               #           per-neuron noise sampling.
