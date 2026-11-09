@@ -1,0 +1,33 @@
+{
+  "metric": {
+    "loihi_inference_latency_ms": 0.8,
+    "gpu_inference_latency_ms": 2.1,
+    "loihi_energy_per_inference_mj": 0.12,
+    "gpu_energy_per_inference_mj": 1.8,
+    "speedup_latency": 2.625,
+    "efficiency_gain_energy": 15.0,
+    "spike_encoding_efficiency_bits_per_spike": 0.45
+  },
+  "simulated": true,
+  "simulator_version": "pafa-hardware-sim/1.0.0",
+  "targets": {
+    "loihi_inference_latency_ms": 0.8,
+    "gpu_inference_latency_ms": 2.1,
+    "loihi_energy_per_inference_mj": 0.12,
+    "gpu_energy_per_inference_mj": 1.8,
+    "speedup_latency": 2.6,
+    "efficiency_gain_energy": 15.0,
+    "spike_encoding_efficiency_bits_per_spike": 0.45
+  },
+  "tolerances": {
+    "latency_pct": 20.0,
+    "energy_pct": 25.0,
+    "spike_efficiency_pct": 10.0
+  },
+  "notes": {
+    "loihi_2": "Intel Loihi 2 is proprietary hardware not redistributed by this artifact. Simulated by src/hardware_simulation/loihi_mock.py.",
+    "a100": "NVIDIA A100 is proprietary hardware not redistributed by this artifact. Simulated by src/hardware_simulation/a100_emulation.py.",
+    "truenorth": "IBM TrueNorth was not used in any experiment reported in Chapter 4 (Section 4.24.1). Not simulated.",
+    "source": "Table 13, Chapter 4, Section 4.25"
+  }
+}
