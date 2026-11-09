@@ -1,0 +1,166 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# hardware_emulation_config.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   configs/default_pafa_config.yaml    (File 9, master config)
+#   README.md, REPRODUCIBILITY_CHECKLIST.md, LICENSE
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343
+# License:        MIT
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# Calibrates the two proprietary-hardware simulators and pins the
+# honesty tags that the output JSONs carry. Consumed by:
+#
+#   src/hardware_simulation/loihi_mock.py      (File 16b)
+#   src/hardware_simulation/a100_emulation.py  (File 16c)
+#   src/hardware_simulation/README_hardware.md (File 16d)
+#   scripts/reproduce_tables/table_13_neuromorphic.py (File 18a)
+#
+# ───────────────────────────────────────────────────────────────────────────
+# What is simulated and what is not
+# ───────────────────────────────────────────────────────────────────────────
+# Table 13 of Chapter 4 reports six measured values on two proprietary
+# platforms:
+#
+#   Intel Loihi 2   — 0.8 ms latency, 0.12 mJ energy, 0.45 bits/spike
+#   NVIDIA A100     — 2.1 ms latency, 1.8 mJ energy
+#
+# This artifact cannot ship those platforms (LICENSE §3). It ships
+# calibrated software simulators that reproduce the reported values
+# within the tolerances below. Every simulator output carries
+# `"simulated": true` in its JSON, and every reported value in the
+# committed expected file is tagged with the simulator version that
+# produced it.
+#
+# IBM TrueNorth is mentioned in §4.24.1 only as a comparison platform
+# and was NOT used in any reported experiment. It is explicitly NOT
+# simulated. The truenorth block below documents this.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Tolerances and where they are enforced
+# ───────────────────────────────────────────────────────────────────────────
+# The tolerances below are the same as those in
+# REPRODUCIBILITY_CHECKLIST.md §5. The simulator emits its measured
+# value with the tag `"simulated": true` and `"target_source":
+# "Table 13"`; the verification script compares the simulated value
+# against the expected value with these tolerances (rtol per row).
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+
+
+# ─── Intel Loihi 2 ────────────────────────────────────────────────────────
+loihi_2:
+  calibration:
+    inference_latency_ms: 0.8    # [thesis] Table 13. Target.
+    energy_per_inference_mj: 0.12
+                                 # [thesis] Table 13. Target.
+    spike_encoding_efficiency: 0.45
+                                 # [thesis] Table 13. Target (bits/spike).
+    num_cores: 128               # [thesis] §4.24.1.
+    neurons_per_cores: 1024      # [thesis] §4.24.1. The trailing `-s`
+                                 #          distinguishes this key from
+                                 #          the singular
+                                 #          `neurons_per_core` in
+                                 #          deployment.loihi_2 of the
+                                 #          master config (File 9);
+                                 #          both refer to the same
+                                 #          hardware quantity. The
+                                 #          loader does not merge keys
+                                 #          across files.
+    synapses: 128000000          # [thesis] §4.24.1.
+    cpu_scaling_factor: 6.4      # [derived] Multiplier applied to the
+                                 #           simulator's measured CPU
+                                 #           latency so that the
+                                 #           simulated value matches
+                                 #           the reported 0.8 ms
+                                 #           within the tolerances
+                                 #           below. Recompute this
+                                 #           only on a new CPU
+                                 #           calibration.
+  tolerances:
+    latency_absolute_pct: 20.0   # [default] Matches
+                                 #           REPRODUCIBILITY_CHECKLIST.md §5.
+    energy_absolute_pct: 25.0    # [default]
+    spike_efficiency_pct: 10.0   # [default]
+
+
+# ─── NVIDIA A100 ──────────────────────────────────────────────────────────
+a100:
+  calibration:
+    inference_latency_ms: 2.1    # [thesis] Table 13. Target.
+    energy_per_inference_mj: 1.8 # [thesis] Table 13. Target.
+    cuda_cores: 6912             # [thesis] §4.24.1.
+    memory_gb: 40                # [thesis] §4.24.1.
+    cpu_scaling_factor: 22.0     # [derived] Same rationale as the
+                                 #           Loihi-2 scaling factor
+                                 #           above, for the A100
+                                 #           simulator.
+  tolerances:
+    latency_absolute_pct: 20.0   # [default]
+    energy_absolute_pct: 25.0    # [default]
+
+
+# ─── Global tolerances ────────────────────────────────────────────────────
+# Same values as REPRODUCIBILITY_CHECKLIST.md §5. Listed here so that
+# the simulator reads a single file (this one) rather than parsing the
+# Markdown checklist.
+tolerances:
+  latency_absolute_pct: 20.0
+  energy_absolute_pct: 25.0
+
+
+# ─── Honesty tags ────────────────────────────────────────────────────────
+# Every simulator output carries these tags. If someone re-runs on real
+# hardware with `mode.hardware: "real"` (master config, File 9), they
+# must flip `simulated` to false and update `simulator_version` to the
+# string `hardware-direct`; the verification script refuses to compare
+# simulated values against a real-hardware expected file and vice
+# versa.
+honesty_tags:
+  simulated: true
+  simulator_version: "pafa-hardware-sim/1.0.0"
+  target_source: "Table 13"
+  thesis_section: "§4.24.1, §4.25, Table 13"
+  note: |
+    Any JSON emitted by the simulators carries
+    `"simulated": true, "simulator_version": "pafa-hardware-sim/1.0.0"`.
+    Downstream analysis that quotes Table 13 must preserve these tags;
+    quoting a simulated number as if it were a hardware measurement
+    is an integrity violation and is flagged in the anti-confusion
+    checklist at the bottom of README.md.
+
+
+# ─── IBM TrueNorth — explicit non-use ────────────────────────────────────
+# §4.24.1 mentions TrueNorth only as a comparison platform. It was NOT
+# used in any reported experiment. It is NOT simulated in this
+# artifact. This block exists so that a reviewer who greps for
+# "truenorth" sees the explicit `used: false` flag rather than a
+# silent absence.
+truenorth:
+  used: false
+  cores: 4096                    # [thesis] §4.24.1 (descriptive only;
+                                 #          not measured).
+  neurons_per_core: 256          # [thesis] §4.24.1.
+  total_neurons: 1048576         # [derived] 4096 × 256.
+  note: |
+    IBM TrueNorth was not available for this evaluation and no result
+    in this chapter depends on it. Its architecture is mentioned in
+    §4.24.1 only for comparison. The artifact does not simulate
+    TrueNorth and makes no claim about it. See
+    src/hardware_simulation/README_hardware.md (File 16d).
+
+
+# ─── Seed ────────────────────────────────────────────────────────────────
+seed:
+  hardware_sim_seed: 42          # [default] Consumed by the simulators
+                                 #           for the jitter added on top
+                                 #           of the calibrated mean.
+                                 #           Must equal
+                                 #           default_pafa_config.yaml::seed.
