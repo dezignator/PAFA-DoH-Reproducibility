@@ -1,0 +1,18 @@
+{
+  "metrics": {
+    "dns_tunnelling_detection_rate": 0.995,
+    "c2_heartbeat_detection_rate": 0.987,
+    "side_channel_detection_rate": 1.000
+  },
+  "targets": {
+    "dns_tunnelling_detection_rate": 0.995,
+    "c2_heartbeat_detection_rate": 0.987,
+    "side_channel_detection_rate": 1.000
+  },
+  "notes": {
+    "dns_tunnelling": "99.5% empirical (Section 4.26.1). Measured on the full 32 GB Zenodo corpus. Toy mode reaches ~85-90% (README Section 4).",
+    "c2_heartbeat": "98.7% empirical (Section 4.26.4).",
+    "side_channel": "100% categorical, no key recovery succeeded in the evaluated ChipWhisperer runs (Section 4.26.3). Not a rate over a sample.",
+    "source": "Table 14, Chapter 4, Section 4.26"
+  }
+}
