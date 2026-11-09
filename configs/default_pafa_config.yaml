@@ -1,0 +1,608 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# default_pafa_config.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   README.md                       (File 1 of 74)
+#   REPRODUCIBILITY_CHECKLIST.md    (File 2 of 74)
+#   LICENSE                         (File 3 of 74)
+#   requirements.txt                (File 4 of 74)
+#   environment.yml                 (File 5 of 74)
+#   Dockerfile                      (File 6 of 74)
+#   setup.py                        (File 7 of 74)
+#   .gitignore                      (File 8 of 74)
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343   (Neural Networks, April 2026)
+# License:        MIT (this file, as part of the artifact's source code)
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# This is the master config. Every other config in configs/ is referenced
+# from the `components:` block below; nothing else in the artifact is
+# hard-coded. `scripts/train_pafa.py` (File 17a) reads this file first,
+# then reads the sibling configs, then runs the pipeline described in
+# §4.4 of the chapter.
+#
+# Inline value tags (used consistently in every config file in this
+# artifact):
+#
+#   [thesis]   Value taken verbatim from Chapter 4, §x.y or Table N.
+#   [derived]  Value computed at load time from a formula in the chapter
+#              or from another [thesis] value.
+#   [default]  Engineering default that does not appear in the chapter;
+#              chosen for reproducibility, stated here so the reviewer can
+#              tell it apart from a thesis-reported value.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Path resolution contract (see also File 7 footer and src/utils/logger.py)
+# ───────────────────────────────────────────────────────────────────────────
+# Every path in this file is interpreted relative to one of three roots,
+# checked in this order:
+#
+#   1. $PAFA_ROOT, if set. Docker users mount data/raw, data/processed
+#      and outputs as volumes and set PAFA_ROOT=/app; local users can
+#      set PAFA_ROOT=$(pwd) to pin resolution to the repo root.
+#
+#   2. The repository root, resolved from the package location when the
+#      artifact is installed with `pip install -e .` (the common case).
+#
+#   3. <sys.prefix>/share/pafa-doh/, when the artifact is installed as a
+#      wheel (data_files entries from setup.py put the same files here).
+#
+# A path that does not exist at any of the three roots is a configuration
+# error, not a silent fallback: the loader raises FileNotFoundError with
+# the full list of roots it tried.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Schema stability
+# ───────────────────────────────────────────────────────────────────────────
+# This file is part of the artifact's public interface: reviewers and CI
+# read it. Do not rename, remove or reorder top-level keys — the loader
+# iterates them in the declared order and prints each block to the run
+# log so that a reproducibility report can be reconstructed from the log
+# alone. Add new keys only at the *end* of an existing block, with a
+# comment explaining what they are for and which script reads them.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+# ─── Identity ──────────────────────────────────────────────────────────────
+version: "1.0.0"                # [default] Artifact version; must match
+                                #           setup.py:ARTIFACT_VERSION,
+                                #           Dockerfile:LABEL version,
+                                #           README.md:status banner.
+thesis_chapter: "Chapter 4"     # [thesis] This artifact reproduces Chapter 4 only.
+thesis_doi: "10.1016/j.neunet.2025.108343"
+                                # [thesis] Neural Networks, April 2026.
+                                #          Not the MIRAGE-DoH DOI, not the
+                                #          E3-DoH DOI, not the A3E-DNS DOI.
+artifact_root_env: "PAFA_ROOT"  # [default] Env var consulted first by the
+                                #           path resolver (see header).
+
+
+# ─── Determinism ───────────────────────────────────────────────────────────
+seed: 42                        # [thesis] §4.28.1, Table 16: the reported
+                                #          results were produced with seed 42.
+                                #          All five seeded RNGs (random, numpy,
+                                #          torch, cudnn, PYTHONHASHSEED) are
+                                #          set by src/utils/seed.py.
+determinism: "strict"           # [thesis] §4.31: the artifact is expected to
+                                #          reproduce the committed expected
+                                #          outputs within the strict tolerance
+                                #          in REPRODUCIBILITY_CHECKLIST.md §8.
+                                #          Allowed values:
+                                #            "strict"  — enable cudnn
+                                #                         determinism, disable
+                                #                         cudnn benchmark,
+                                #                         use
+                                #                         torch.use_deterministic_algorithms(True)
+                                #                         where the
+                                #                         accelerator supports it.
+                                #            "relaxed" — do not force the
+                                #                         deterministic kernels;
+                                #                         useful for debugging
+                                #                         on unusual accelerators
+                                #                         but may fail the
+                                #                         strict tolerance.
+                                #          A third value, "off", is not
+                                #          supported by the artifact because
+                                #          the expected outputs were produced
+                                #          under "strict".
+
+
+# ─── Mode switches ─────────────────────────────────────────────────────────
+mode:
+  data: "toy"                   # [default] "toy"  → 1,000 + 1,000 row
+                                #                     synthetic dataset,
+                                #                     generated in-place by
+                                #                     data/make_toy_dataset.py,
+                                #                     no network. Accuracy
+                                #                     ~85–90 %; NOT the
+                                #                     reported numbers. Use
+                                #                     for smoke tests.
+                                #           "full" → 32 GB Zenodo corpus +
+                                #                     CIC-DoH2023, downloaded
+                                #                     by data/download_datasets.py,
+                                #                     preprocessed by
+                                #                     data/preprocess_*.py.
+                                #                     Required to reproduce
+                                #                     Tables 14, 16, 17 and
+                                #                     Figures 8–10.
+  hardware: "simulate"          # [default] "simulate" → Intel Loihi 2 and
+                                #                        NVIDIA A100 are
+                                #                        emulated by
+                                #                        src/hardware_simulation/.
+                                #                        Reproduces Table 13
+                                #                        latency and energy
+                                #                        within ±20 % / ±25 %
+                                #                        (REPRODUCIBILITY_CHECKLIST.md §5).
+                                #           "real"     → use the actual
+                                #                        hardware. Requires the
+                                #                        proprietary SDKs
+                                #                        (Intel Lava/NxSDK,
+                                #                        NVIDIA driver+CUDA),
+                                #                        which are NOT
+                                #                        redistributable and
+                                #                        NOT shipped in this
+                                #                        artifact. If the SDKs
+                                #                        are absent, the loader
+                                #                        raises at load time
+                                #                        rather than silently
+                                #                        falling back to
+                                #                        "simulate".
+
+
+# ─── Paths ─────────────────────────────────────────────────────────────────
+# All paths relative to the resolved artifact root (see header). The
+# trailing slash on directory paths is intentional; keep it so that
+# `pathlib.Path(...) / f` behaves the same across platforms.
+paths:
+  data_root:        "data/"                              # [default]
+  toy_dataset:      "data/toy_dataset/"                  # [default] Two
+                                                         # header-only CSVs
+                                                         # live here.
+  raw_datasets:     "data/raw/"                          # [default] Download
+                                                         # target for the
+                                                         # 32 GB Zenodo
+                                                         # corpus and the
+                                                         # CIC-DoH2023
+                                                         # bundle.
+  processed_datasets: "data/processed/"                  # [default] Preprocessed
+                                                         # 47-column feature
+                                                         # matrix + splits.
+  outputs:          "outputs/"                           # [default] Gitignored.
+  checkpoints:      "outputs/checkpoints/"               # [default] Federated
+                                                         # and SNN checkpoints.
+  logs:             "outputs/logs/"                      # [default] JSON +
+                                                         # human-readable logs.
+  figures:          "outputs/figures/"                   # [default] Rendered
+                                                         # Figures 7–10.
+  tables:           "outputs/tables/"                    # [default] JSON for
+                                                         # Tables 13–17, 17a.
+  hardware_sim:     "outputs/hardware_sim/"              # [default] Simulator
+                                                         # traces, tagged
+                                                         # "simulated": true.
+  expected:         "expected_outputs/"                  # [default] Committed
+                                                         # reference files for
+                                                         # verification_script.py.
+
+
+# ─── Datasets ──────────────────────────────────────────────────────────────
+# The artifact uses exactly two public datasets, plus a 1,000 + 1,000 row
+# synthetic toy dataset derived from the schema of the first. No other
+# dataset is used in any reported result.
+datasets:
+  zenodo:
+    doi: "10.5281/zenodo.5957677"        # [thesis] §4.24.1, §4.25.1, Table 14–17.
+                                         #          Use the bare DOI string (no
+                                         #          https:// prefix, no trailing
+                                         #          slash) — data/download_datasets.py
+                                         #          and src/attacks/* compare it
+                                         #          verbatim.
+    url: "https://doi.org/10.5281/zenodo.5957677"
+                                         # [derived] Convenience URL, resolved
+                                         #           from the DOI. Not used by
+                                         #           the downloader.
+    expected_size_gb: 32                 # [thesis] §4.24.1, §4.25.1.
+    licence: "CC-BY-4.0"                 # [thesis] upsteam licence; also
+                                         #          referenced by LICENSE §2.
+    preprocess_script: "data/preprocess_zenodo.py"
+                                         # [default] File 10d of the 74-file plan.
+    notes: |
+      Not redistributed by this repository. Fetched at run time by
+      data/download_datasets.py (File 10b) from the canonical DOI,
+      with SHA-256 verification against data/CHECKSUMS.txt (File 10j).
+      Downloading and then baking the 32 GB corpus into a Docker image
+      is explicitly forbidden by the LICENSE scope note (§2 of File 3).
+
+  cic_doh2023:
+    url: "https://www.unb.ca/cic/datasets/dohbrw-2023.html"
+                                         # [thesis] §4.24.1. CIC-DoH2023 is
+                                         #          used for the 47-column
+                                         #          schema-parity check on the
+                                         #          preprocessor, not as a
+                                         #          training source.
+    expected_size_gb: 2.5                # [derived] The public bundle is
+                                         #           ≈ 2.5 GB compressed.
+    licence: "CC-BY-4.0"                 # [thesis] upstream licence.
+    preprocess_script: "data/preprocess_doh2023.py"
+                                         # [default] File 10c.
+    notes: |
+      Not redistributed. Fetched at run time by data/download_datasets.py.
+      Used only to validate that preprocess_zenodo.py produces the same
+      47-column feature schema on a second, independent corpus.
+
+  toy:
+    benign_rows: 1000                    # [default] §"1.3 The Exact Numbers
+                                         #           to Reproduce" of the
+                                         #           blueprint: the toy demo
+                                         #           uses 1,000 benign rows.
+    malicious_rows: 1000                 # [default] Same source: 1,000
+                                         #           malicious rows.
+    seed: 42                             # [default] Must equal the top-level
+                                         #           `seed` above. A mismatch
+                                         #           is a configuration error;
+                                         #           src/utils/logger.py
+                                         #           raises at load time.
+    generator: "data/make_toy_dataset.py"
+                                         # [default] File 10f.
+    schema_source: "data/toy_dataset/benign_sample.csv"
+                                         # [default] The 47-column header
+                                         #           row is the authoritative
+                                         #           schema; the toy
+                                         #           generator reads the
+                                         #           header from this file
+                                         #           so that any future
+                                         #           schema change propagates
+                                         #           to the toy dataset
+                                         #           automatically.
+    notes: |
+      The two committed CSVs (Files 10h–10i) are header-only. The full
+      toy dataset is generated in place by
+      `python data/make_toy_dataset.py --mode synthetic --seed 42` and
+      is a CC-BY 4.0 derivative of the Zenodo schema (no Zenodo data
+      rows are redistributed). Toy-mode accuracy of ~85–90 % is
+      expected and does NOT reproduce Chapter 4's headline figures.
+
+
+# ─── Component configuration files ─────────────────────────────────────────
+# Each entry points to a sibling YAML file in configs/. Files 9b–9h of
+# the 74-file plan. The loader reads all of them at startup and merges
+# them into a single dict; name clashes across files are a configuration
+# error and raise at load time.
+components:
+  fl:                   "configs/fl_dp_params.yaml"
+                                         # [default] File 9b. Federated
+                                         #           aggregation, DP-SGD,
+                                         #           Byzantine-robust rule,
+                                         #           convergence bound.
+  snn:                  "configs/snn_hyperparameters.yaml"
+                                         # [default] File 9c. Log-burst
+                                         #           encoder, LIF neuron,
+                                         #           STDP, Loihi-2 target
+                                         #           values.
+  tda:                  "configs/tda_params.yaml"
+                                         # [default] File 9d. Vietoris–Rips,
+                                         #           p-Wasserstein, Betti-1,
+                                         #           significance test.
+  zk:                   "configs/zk_attestation_params.yaml"
+                                         # [default] File 9e. Groth16 over
+                                         #           BN128, FRI-based STARK,
+                                         #           timings, soundness,
+                                         #           proof size.
+  homomorphic:          "configs/homomorphic_params.yaml"
+                                         # [default] File 9f. Ring-LWE
+                                         #           parameters, allowed
+                                         #           operations, DP
+                                         #           accountant.
+  baselines:            "configs/baselines_config.yaml"
+                                         # [default] File 9g. Centralized
+                                         #           CNN-LSTM and rule-based
+                                         #           baselines for Table 14
+                                         #           comparison.
+  hardware_emulation:   "configs/hardware_emulation_config.yaml"
+                                         # [default] File 9h. Loihi-2 and
+                                         #           A100 simulator
+                                         #           calibration and
+                                         #           tolerances, plus
+                                         #           the explicit
+                                         #           TrueNorth non-use
+                                         #           statement.
+
+
+# ─── Threat model ──────────────────────────────────────────────────────────
+# This block is enforced in code, not just documented. src/utils/logger.py
+# (File 11d) reads `forbidden_observables` at startup and refuses to run
+# any script that has a feature-engineering function importing from a
+# module that touches one of these fields. The list is the same as the
+# forbidden list in §1.7.2 and §4.13 of the chapter.
+threat_model:
+  permitted_observables:
+    # [thesis] §1.7.1 / §4.4.1. The six permitted observables. Every
+    #          feature computed by any component must be derivable from
+    #          one of these six fields, and no others.
+    - packet_inter_arrival_time       # ±1 µs resolution (§1.7.1)
+    - query_size_distribution
+    - tls_handshake_parameters        # cipher suite capped at 256 bits (§1.7.1)
+    - http3_frame_sequences           # HTTP/3 frame preparation sequences
+    - tls_extension_presence          # presence indicators only
+    - unidirectional_flow_features    # one-way flow characteristics
+
+  forbidden_observables:
+    # [thesis] §1.7.2 / §4.13. These fields are NEVER read by any
+    #          component of the artifact. The checks below are the same
+    #          four that the chapter lists as out of scope.
+    - query_payload_content
+    - response_payload_content
+    - application_layer_semantics
+    - database_information
+
+  enforcement:
+    # [default] Where the enforcement lives. If the resolver fails to
+    # find this module at import time, it raises immediately (fail-closed).
+    enforcer: "src/utils/logger.py::ForbiddenObservablesGuard"
+    fail_closed: true                 # [default] If any component tries
+                                      #           to import a forbidden
+                                      #           field, abort the run. Do
+                                      #           NOT change to `false`:
+                                      #           the artifact's claims
+                                      #           on privacy (§4.5) are
+                                      #           conditional on this.
+
+
+# ─── Training ──────────────────────────────────────────────────────────────
+training:
+  total_epochs: 10                # [thesis] §4.28.1, Table 16: target
+                                  #          ≤ 10 epochs. The chapter reports
+                                  #          8 achieved, recorded in
+                                  #          outputs/tables/table_16_federated_learning.json
+                                  #          after `train_pafa.py --mode full`.
+  batch_size: 64                  # [default] Not stated in the chapter; 64
+                                  #           is the engineering default used
+                                  #           in the committed expected outputs.
+  learning_rate: 0.001            # [default] Same.
+  federated_rounds: 100           # [thesis] §6.14 cross-reference; the
+                                  #          blueprint for Chapter 4 reuses
+                                  #          the same 100-round schedule.
+                                  #          A shorter run (e.g. 20 rounds)
+                                  #          is enough for a smoke test but
+                                  #          will not converge to the
+                                  #          reported 99.4 % ± 0.12 % CI.
+  clients: 100                    # [thesis] Table 16, "Federated clients 100".
+  convergence_gradient_norm: 0.001
+                                  # [thesis] Table 16: target
+                                  #          gradient-norm threshold δ = 1e-3.
+  early_stopping_patience: 3      # [default] Engineering early stop on the
+                                  #           validation split. The artifact
+                                  #           does not report early-stopped
+                                  #           epochs as "achieved" in the
+                                  #           table; the achieved epoch count
+                                  #           is the number of epochs that
+                                  #           actually ran.
+  cma_curriculum_removed: true    # [default] The PAFA-DoH framework has no
+                                  #           Cognitive MetaAgents (that is a
+                                  #           MIRAGE-DoH concept); this flag
+                                  #           exists only so that the shared
+                                  #           trainer recognises the
+                                  #           framework and does not attempt
+                                  #           to instantiate CMA curricula.
+
+
+# ─── Evaluation ────────────────────────────────────────────────────────────
+evaluation:
+  metrics:
+    # [thesis] §4.27–§4.29. These are exactly the metrics the chapter
+    #          reports; the JSON schema for Table 16 uses these names.
+    - accuracy
+    - fpr
+    - precision
+    - recall
+    - f1
+    - auc_roc
+    - latency_ms                 # Table 13 (Loihi 2 / A100) — simulated.
+    - energy_mj_per_inference    # Table 13 — simulated.
+    - zk_proof_gen_ms            # Table 15.
+    - zk_proof_verify_ms         # Table 15.
+    - zk_proof_size_kb           # Table 15.
+    - snr_reduction_pct          # Table 14 side-channel row, §4.14.
+    - betti_1_attack             # Table 17.
+    - betti_1_benign             # Table 17.
+    - persistence_entropy_attack # Table 17.
+    - persistence_entropy_benign # Table 17.
+    - wasserstein_attack         # Table 17.
+    - wasserstein_benign         # Table 17.
+
+  confidence_intervals:
+    # [thesis] Table 16 reports 99.4 % ± 0.12 % (95 % CI). The bootstrap
+    #          settings below are the ones used to produce the committed
+    #          expected file.
+    level: 0.95                  # [thesis] Table 16.
+    n_bootstrap: 1000            # [default] Enough for a 95 % CI on the
+                                 #           99 % accuracy ballpark without
+                                 #           dominating runtime.
+    bootstrap_seed: 42           # [default] Must equal the top-level seed.
+    report_per_class: true       # [default] Table 16 reports the global
+                                 #           number; the per-class counts
+                                 #           go to the JSON so a reviewer
+                                 #           can compute any other metric.
+
+  statistical_tests:
+    # [thesis] Table 16 lists these tests by name. The artifact reports
+    #          the p-values but does NOT re-derive the test procedures.
+    accuracy_vs_baseline: "Welch's t-test"
+    privacy_tradeoff: "KL divergence"
+    convergence: "Kolmogorov-Smirnov"
+    client_dropout: "Chi-squared goodness-of-fit"
+    adversarial_robustness: "Mann-Whitney U-test"
+
+
+# ─── Deployment ────────────────────────────────────────────────────────────
+# [thesis] §4.24.1. Both Loihi 2 and A100 are proprietary and are NOT
+# shipped with the artifact. TrueNorth is mentioned only for comparison
+# and is not used in any reported experiment. See
+# REPRODUCIBILITY_CHECKLIST.md §5 for the simulator tolerances.
+deployment:
+  loihi_2:
+    cores: 128                            # [thesis] §4.24.1.
+    neurons_per_core: 1024                # [thesis] §4.24.1.
+    total_neurons: 128000                 # [derived] 128 × 1024.
+    synapses: 128000000                   # [thesis] §4.24.1.
+    simulator: "src/hardware_simulation/loihi_mock.py"
+                                          # [default] File 16b.
+    target_latency_ms: 0.8                # [thesis] Table 13.
+    target_energy_mj_per_inference: 0.12  # [thesis] Table 13.
+    tolerance_latency_pct: 20.0           # [default] Matches
+                                          #           REPRODUCIBILITY_CHECKLIST.md §5.
+    tolerance_energy_pct: 25.0            # [default] Same.
+
+  a100:
+    cuda_cores: 6912                      # [thesis] §4.24.1.
+    memory_gb: 40                         # [thesis] §4.24.1.
+    simulator: "src/hardware_simulation/a100_emulation.py"
+                                          # [default] File 16c.
+    target_latency_ms: 2.1                # [thesis] Table 13.
+    target_energy_mj_per_inference: 1.8   # [thesis] Table 13.
+    tolerance_latency_pct: 20.0           # [default]
+    tolerance_energy_pct: 25.0            # [default]
+
+  truenorth:
+    used: false                           # [thesis] §4.24.1: "IBM TrueNorth
+                                          #          was not used in any
+                                          #          reported experiment;
+                                          #          it is mentioned only
+                                          #          for comparison."
+    cores: 4096                           # [thesis] §4.24.1 (descriptive
+                                          #          only; not measured).
+    neurons_per_core: 256                 # [thesis] §4.24.1.
+    total_neurons: 1048576                # [derived] 4096 × 256.
+    note: |
+      The presence of this block in the config is NOT a claim that
+      TrueNorth was used. It is present so that a reviewer who greps for
+      "truenorth" sees the explicit `used: false` flag and the §4.24.1
+      citation, rather than a silent absence. The artifact does not
+      simulate TrueNorth and does not claim to.
+
+
+# ─── Logging ───────────────────────────────────────────────────────────────
+logging:
+  level: "INFO"                    # [default] INFO in normal runs, DEBUG
+                                   #           for the per-round federated
+                                   #           trace. Set to DEBUG only when
+                                   #           investigating a mismatch;
+                                   #           it adds ~4 MB to the run log
+                                   #           for a full-mode run.
+  format: "human+json"             # [default] Writes both a human-readable
+                                   #           .log file and a machine-
+                                   #           readable .json file to
+                                   #           outputs/logs/. The JSON log
+                                   #           is what verification_script.py
+                                   #           reads when it needs to
+                                   #           reconstruct which run
+                                   #           produced which table.
+  json_dir: "outputs/logs/"        # [default] Matches paths.logs.
+  log_config_hash: true            # [default] Every run log records the
+                                   #           SHA-256 of every config
+                                   #           file it read, so that two
+                                   #           runs can be compared even if
+                                   #           the config files have changed
+                                   #           in between. The run
+                                   #           metadata is also printed in
+                                   #           the header of every human-
+                                   #           readable log.
+  record_git_commit: true          # [default] Adds `git rev-parse HEAD`
+                                   #           (if available) to the run
+                                   #           metadata. Useful for the
+                                   #           reviewer to confirm which
+                                   #           commit produced a given
+                                   #           output; absent when the
+                                   #           artifact is used outside a
+                                   #           git checkout.
+
+
+# ─── Output manifest ───────────────────────────────────────────────────────
+# Names and paths of the six tables and four figures the artifact can
+# reproduce. These names are the contract between scripts/reproduce_*/
+# (Files 18a–19d), expected_outputs/ (Files 20a–20j) and
+# verification_script.py (File 20i). Do NOT rename without updating all
+# three in lockstep.
+output_manifest:
+  tables:
+    table_13: "outputs/tables/table_13_neuromorphic.json"
+    table_14: "outputs/tables/table_14_attack_metrics.json"
+    table_15: "outputs/tables/table_15_zk_attestation.json"
+    table_16: "outputs/tables/table_16_federated_learning.json"
+    table_17: "outputs/tables/table_17_tda_validation.json"
+    table_17a: "outputs/tables/table_17a_closest_methods.json"
+
+  figures:
+    figure_7:  "outputs/figures/figure_7_architecture.pdf"
+    figure_8:  "outputs/figures/figure_8_threat_vectors.csv"
+    figure_9:  "outputs/figures/figure_9_privacy_tradeoff.csv"
+    figure_10: "outputs/figures/figure_10_mitigation_privacy.csv"
+
+  expected:
+    # Same names, but under expected_outputs/ (Files 20a–20j). The
+    # verification script compares the left column against the right
+    # column one-to-one.
+    table_13:  "expected_outputs/table_13_expected.json"
+    table_14:  "expected_outputs/table_14_expected.json"
+    table_15:  "expected_outputs/table_15_expected.json"
+    table_16:  "expected_outputs/table_16_expected.json"
+    table_17:  "expected_outputs/table_17_expected.json"
+    table_17a: "expected_outputs/table_17a_closest_methods.json"
+    figure_7:  "expected_outputs/figure_7_expected.csv"
+    figure_8:  "expected_outputs/figure_8_expected.csv"
+    figure_9:  "expected_outputs/figure_9_expected.csv"
+    figure_10: "expected_outputs/figure_10_expected.csv"
+
+  verification_script: "expected_outputs/verification_script.py"
+                                   # [default] File 20i.
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# End of default_pafa_config.yaml
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Cross-reference — where each block is consumed:
+#
+#   version, thesis_*, artifact_root_env   ← every script (via logger.py)
+#   seed, determinism                      ← src/utils/seed.py (File 11c)
+#   mode                                   ← scripts/train_pafa.py (File 17a)
+#   paths                                  ← src/utils/logger.py (File 11d)
+#   datasets                               ← data/download_datasets.py (File 10b),
+#                                            data/make_toy_dataset.py (File 10f)
+#   components                             ← scripts/train_pafa.py (File 17a),
+#                                            every src/models/* (Files 12b–12h)
+#   threat_model                           ← src/utils/logger.py (File 11d),
+#                                            every feature-engineering function
+#   training                               ← scripts/train_pafa.py (File 17a)
+#   evaluation                             ← scripts/evaluate_models.py (File 17c),
+#                                            expected_outputs/verification_script.py
+#                                            (File 20i)
+#   deployment                             ← src/hardware_simulation/* (Files 16b–16c)
+#   logging                                ← src/utils/logger.py (File 11d)
+#   output_manifest                        ← every scripts/reproduce_* (Files 18a–19d),
+#                                            expected_outputs/verification_script.py
+#                                            (File 20i)
+#
+# Validation on load:
+#   1. version == setup.py:ARTIFACT_VERSION == Dockerfile:LABEL
+#      org.opencontainers.image.version == README.md status banner.
+#   2. training.clients >= 1.
+#   3. training.seed implied by top-level `seed`; `datasets.toy.seed`
+#      must equal it.
+#   4. datasets.zenodo.doi has no "https://" prefix and no trailing "/".
+#   5. threat_model.forbidden_observables has exactly 4 entries.
+#   6. Every path in `components` resolves to a file at the artifact
+#      root.
+#   7. Every path in `output_manifest.expected` resolves to a file at the
+#      artifact root (files 20a–20j are committed, so this check is
+#      active on a clean clone).
+#
+# Failure of any check raises ValueError with the field name and the
+# observed value, so a reviewer can fix the config without reading the
+# loader source.
+#
+# ═══════════════════════════════════════════════════════════════════════════
