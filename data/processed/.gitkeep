@@ -1,0 +1,5 @@
+# This file pins the data/processed/ directory in git.
+# Preprocessor and splitter output lands here; see ../README_data.md §4.
+# Committed to git so that a fresh clone has the empty directory the
+# preprocessors (preprocess_*.py) and the splitter (split_data.py)
+# write into.
