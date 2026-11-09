@@ -1,0 +1,281 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# environment.yml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   README.md                       (File 1 of 74)
+#   REPRODUCIBILITY_CHECKLIST.md    (File 2 of 74)
+#   LICENSE                         (File 3 of 74)
+#   requirements.txt                (File 4 of 74)
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343   (Neural Networks, April 2026)
+# License:        MIT (this file, as part of the artifact's source code)
+#
+# ───────────────────────────────────────────────────────────────────────────
+# What this file is
+# ───────────────────────────────────────────────────────────────────────────
+# This is the *conda equivalent* of requirements.txt. It pins the same
+# package versions, in the same order of intent, so that `conda env create
+# -f environment.yml` produces a working PAFA-DoH environment on Linux,
+# macOS (Intel and Apple silicon), and Windows.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Usage
+# ───────────────────────────────────────────────────────────────────────────
+#   conda env create -f environment.yml
+#   conda activate pafa-doh
+#   python -m pytest tests/ -v
+#   python expected_outputs/verification_script.py --toy-mode
+#
+# To update an existing environment after a pin change:
+#
+#   conda env update -f environment.yml --prune
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Do NOT mix this file with requirements.txt
+# ───────────────────────────────────────────────────────────────────────────
+# The conda environment is meant to be self-contained. Do not run
+# `pip install -r requirements.txt` inside a `pafa-doh` environment: pip will
+# happily downgrade a conda-installed binary (e.g. gudhi, ripser, torch) to
+# a pip wheel that does not match the C++ extension ABI that conda built
+# against, and the artifact will fail with cryptic import errors. Either
+# install with conda (this file) OR install with pip (requirements.txt),
+# never both.
+#
+# The only exception is `py_ecc` (see the `pip:` block at the bottom),
+# which has no conda-forge feedstock. Installing it with pip inside an
+# otherwise-conda environment is safe because it is a pure-Python package
+# with no compiled extension.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Channel order
+# ───────────────────────────────────────────────────────────────────────────
+# The channel order is deliberate and must not be reordered:
+#
+#   1. conda-forge   — the canonical feedstock for every scientific package
+#                      used here except torch; also carries gudhi, ripser,
+#                      snntorch, networkx, matplotlib, seaborn, graphviz,
+#                      dask, requests, pyyaml, packaging, psutil, pytest.
+#   2. pytorch       — the official PyTorch channel. Carries torch,
+#                      torchvision, torchaudio. The conda-forge copies of
+#                      these packages are usually a minor version behind and
+#                      can lag a torch patch release; the pytorch channel is
+#                      the authoritative source for the 2.3.1 pin.
+#   3. defaults      — listed last so that if a package is temporarily
+#                      missing from conda-forge it is resolved from
+#                      Anaconda defaults rather than failing. This artifact
+#                      does not depend on any package that is defaults-only,
+#                      so the defaults channel will only be used as a last
+#                      resort.
+#
+# The `nodefaults` channel is intentionally NOT used: the "Do NOT mix"
+# guidance above relies on conda-forge being authoritative, but removing
+# `defaults` entirely would make `conda env create` fail on a fresh
+# Miniconda install where conda-forge is not yet configured as a channel.
+# Leaving `defaults` in last position preserves the "conda-forge first"
+# intent without creating a fragile initial-setup step.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# CPU vs GPU
+# ───────────────────────────────────────────────────────────────────────────
+# This environment is CPU-first, matching requirements.txt. The `pytorch`
+# channel will resolve to the CPU build of torch 2.3.1 unless a CUDA
+# constraint is added. For the full-mode reproduction of Tables 13, 14,
+# 16 and Figures 8–10 on real A100 hardware, add the appropriate
+# `cuda-toolkit` and a CUDA-suffixed torch build to the `pytorch::`
+# section below, or install the CUDA wheel separately with
+# `--extra-index-url https://download.pytorch.org/whl/cu121` as described
+# in requirements.txt.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Proprietary hardware — NOT listed in this file
+# ───────────────────────────────────────────────────────────────────────────
+# Intel Loihi 2 (Lava / NxSDK), NVIDIA A100 (driver + CUDA toolkit), and
+# IBM TrueNorth (Compass / Eedn) are proprietary and are NOT
+# redistributable. They are NOT listed in `dependencies:`. The artifact
+# ships calibrated software simulators in `src/hardware_simulation/` that
+# reproduce the reported behaviour of Loihi 2 and A100 within the
+# tolerances in REPRODUCIBILITY_CHECKLIST.md §5. IBM TrueNorth was not
+# used in any experiment reported in Chapter 4 (§4.24.1) and is
+# explicitly not simulated.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Binary / build dependencies
+# ───────────────────────────────────────────────────────────────────────────
+# Conda-forge ships pre-built binaries for gudhi and ripser on Linux x86_64,
+# Linux aarch64, macOS x86_64, macOS arm64, and Windows x86_64. On other
+# platforms (e.g. Linux ppc64le, FreeBSD) conda will fall back to a
+# source build and will need a C++ toolchain. graphviz (the Python
+# bindings) also needs the `dot` binary, which conda-forge ships as a
+# separate `graphviz` package — it is listed below as a top-level
+# dependency so that `conda env create` installs the binary automatically.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: pafa-doh
+
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+
+dependencies:
+  # ─── Python interpreter ──────────────────────────────────────────────────
+  # Pinned to the exact patch. Do not relax to 3.11.*: some of the pinned
+  # transitive dependencies (notably the numpy / scipy ABI and the
+  # graphviz bindings) have only been validated against 3.11.9 with the
+  # py_ecc / pycryptodome versions used here.
+  - python=3.11.9
+
+  # ─── 1. Core numerical stack ─────────────────────────────────────────────
+  # Mirrors requirements.txt section 1. Used everywhere (see requirements.txt
+  # header for the per-file cross-reference).
+  - numpy=1.26.4
+  - scipy=1.13.1
+  - pandas=2.2.2
+  - scikit-learn=1.5.0
+
+  # ─── 2. Machine-learning core ────────────────────────────────────────────
+  # Mirrors requirements.txt section 2. torch / torchvision / torchaudio are
+  # resolved from the `pytorch` channel (see channel-order note above).
+  # joblib is on conda-forge.
+  - pytorch::pytorch=2.3.1
+  - pytorch::torchvision=0.18.1
+  - pytorch::torchaudio=2.3.1
+  - joblib=1.4.2
+
+  # ─── 3. Topological data analysis ────────────────────────────────────────
+  # Mirrors requirements.txt section 3. gudhi and ripser are the compiled
+  # backends; persim is pure Python. All three are on conda-forge.
+  - gudhi=3.10.0
+  - ripser=0.6.12
+  - persim=0.3.7
+
+  # ─── 4. Spiking neural networks ──────────────────────────────────────────
+  # Mirrors requirements.txt section 4. snntorch and brian2 are on
+  # conda-forge. brian2 is cross-check only (it is not on the default
+  # artifact path).
+  - snntorch=0.9.1
+  - brian2=2.7.1
+
+  # ─── 5. Graph operations ─────────────────────────────────────────────────
+  # Mirrors requirements.txt section 5.
+  - networkx=3.3
+
+  # ─── 6. Cryptography and zero-knowledge ──────────────────────────────────
+  # Mirrors requirements.txt section 6, with one intentional divergence:
+  # py_ecc is installed via the `pip:` block at the bottom of this file
+  # because conda-forge has no feedstock for it. pycryptodome is on
+  # conda-forge. py-solc-x is OPTIONAL and is commented out here for the
+  # same reason it is optional in requirements.txt (the default artifact
+  # path does not use the Solidity circuit route).
+  - pycryptodome=3.20.0
+  # - py-solc-x=2.0.3   # OPTIONAL — uncomment only for the Solidity path
+
+  # ─── 7. Plotting and figures ─────────────────────────────────────────────
+  # Mirrors requirements.txt section 7. graphviz is the conda-forge
+  # *binary* package (not just the bindings): installing it makes the
+  # `dot` executable available, which Figure 7 requires.
+  - matplotlib=3.9.0
+  - seaborn=0.13.2
+  - graphviz=0.20.3     # Python bindings
+  - graphviz-system     # `dot` binary; see note in header
+                        # (alternative on some platforms: install
+                        #  graphviz via your OS package manager and omit
+                        #  this line)
+
+  # ─── 8. Data engineering ─────────────────────────────────────────────────
+  # Mirrors requirements.txt section 8. requests pulls urllib3 as a
+  # transitive dependency; the explicit urllib3 pin here forces the
+  # resolver to honor the security pin from requirements.txt.
+  - dask=2024.6.0
+  - requests=2.32.3
+  - urllib3=2.2.2
+
+  # ─── 9. Utilities, logging and reproducibility ───────────────────────────
+  # Mirrors requirements.txt section 9.
+  - pyyaml=6.0.1
+  - tqdm=4.66.4
+  - packaging=24.1
+  - psutil=6.0.0
+
+  # ─── 10. Testing ─────────────────────────────────────────────────────────
+  # Mirrors requirements.txt section 10.
+  - pytest=8.2.2
+  - pytest-cov=5.0.0
+
+  # ─── pip-only packages ───────────────────────────────────────────────────
+  # py_ecc has no conda-forge feedstock. It is pure-Python and has no
+  # compiled extension, so installing it via pip inside this conda
+  # environment is safe and does not break the "Do NOT mix" rule above.
+  # The triple-equals pin (===) is pip's exact-version operator; do not
+  # change it to `==` in this block — `==` inside a `pip:` section can be
+  # treated as a range by the resolver in some conda versions.
+  - pip
+  - pip:
+      - py_ecc===6.0.1
+      # - py-solc-x===2.0.3   # OPTIONAL — uncomment only for the Solidity path
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Notes
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Pins are exact and match requirements.txt. Upgrading any of them
+#    (or letting conda resolve a newer transitive dependency of one of
+#    them) can shift a numeric output outside the strict tolerance in
+#    REPRODUCIBILITY_CHECKLIST.md §8. If you need to upgrade one package
+#    for a local reason, pin it in a local `environment.local.yml`
+#    overlay rather than editing this file.
+#
+# 2. `graphviz-system` is listed as a dependency above the `pip:` block
+#    because Figure 7 (the architecture schematic) requires the `dot`
+#    binary to render. On platforms where conda-forge does not ship
+#    `graphviz-system` (rare; it is on all major platforms as of the
+#    pin in this file), install graphviz via the OS package manager and
+#    delete the `graphviz-system` line. The other figures (8, 9, 10)
+#    are rendered by matplotlib and do not need `dot`.
+#
+# 3. `brian2` is a cross-check only. It is not imported by any module on
+#    the default artifact path. If you want a leaner environment, remove
+#    `brian2` and the artifact will still reproduce every reported
+#    number.
+#
+# 4. `pytest-cov` is a reviewer convenience. It is not imported by `src/`
+#    or by `scripts/`. If you are running the artifact, not reviewing it,
+#    you can drop it.
+#
+# 5. The cross-reference at the end of requirements.txt applies here
+#    unchanged. The mapping is:
+#
+#       §4.4       architectural framework       ← sections 1, 7
+#       §4.6       adversarial federated learning ← sections 1, 2
+#       §4.7–4.8   topological data analysis      ← section 3
+#       §4.9–4.12  spiking neural network         ← section 4
+#       §4.13–4.14 AI-obfuscated cryptography     ← section 6
+#       §4.15–4.18 zero-knowledge attestation     ← section 6
+#       §4.19      self-healing trust fabric      ← sections 1, 6
+#       §4.21–4.22 homomorphic inference + DP     ← sections 1, 6
+#       §4.25      neuromorphic vs GPU            ← sections 2, 4
+#       §4.26      attack simulation suite        ← sections 1, 2, 8
+#       §4.27–4.28 TDA + federated validation     ← sections 1, 3
+#       §4.29–4.30 ZK attestation + comparison    ← sections 6, 7
+#
+# 6. Verification after `conda env create`:
+#
+#       python -c "import numpy, scipy, pandas, torch, gudhi, ripser, \
+#                          persim, snntorch, networkx, pycryptodome, \
+#                          py_ecc, matplotlib, seaborn, graphviz, \
+#                          dask, yaml, pytest; \
+#                  print('imports ok')"
+#
+#    Any ImportError above means a pin did not resolve; re-create the
+#    environment with `conda env create -f environment.yml --force` and
+#    check that `conda-forge` is first in `channels:` (channel order is
+#    read from this file, not from the user's ~/.condarc, when the file
+#    is passed with `-f`).
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# End of environment.yml
+# ═══════════════════════════════════════════════════════════════════════════
