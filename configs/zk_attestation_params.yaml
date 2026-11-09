@@ -1,0 +1,144 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# zk_attestation_params.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   configs/default_pafa_config.yaml    (File 9, master config)
+#   README.md, REPRODUCIBILITY_CHECKLIST.md, LICENSE
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343
+# License:        MIT
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# Configures the zero-knowledge attestation path. Consumed by:
+#
+#   src/models/zk_attestation.py          (File 12e)
+#   src/utils/math_utils.py               (File 11f) — Eqs. 50, 51, 52, 61, 62
+#   src/cli_tools/zk_cli.py               (File 15e)
+#   scripts/reproduce_tables/table_15_zk_attestation.py (File 18c)
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Where each value comes from in the chapter
+# ───────────────────────────────────────────────────────────────────────────
+#   snark.scheme, group       → §4.15.1 (Groth16), Table 17a
+#   snark.constraint_count    → §4.15.1 ("approximately 10⁵"), Table 15
+#   snark.soundness_error_*   → §4.23, Table 15
+#   stark.*                   → §4.17, §4.18 (FRI-based STARK)
+#   timing_targets.*          → Table 15
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+
+
+# ─── Groth16 SNARK ────────────────────────────────────────────────────────
+# §4.15.1, §4.16, §4.23. The succinct non-interactive argument of
+# knowledge used for the primary attestation path. Circuit compiled to
+# R1CS (Eq. 50), then to QAP (Eq. 51). Instantiated over the BN128
+# pairing-friendly curve because BN128 is what py_ecc provides and what
+# the reported 432 ms / 78 ms / 1.8 KB timings were produced with.
+snark:
+  scheme: "groth16"            # [thesis] §4.15.1, Table 15.
+  group: "bn128"               # [thesis] §4.15.1 (pairing-friendly
+                               #          curve). Do NOT change to a
+                               #          different curve; the 432 ms
+                               #          proof generation timing in
+                               #          Table 15 is curve-specific.
+  constraint_count: 100000     # [thesis] §4.15.1 (approximately 10⁵
+                               #          R1CS constraints). The circuit
+                               #          is derived from the resolver
+                               #          security policy; the exact
+                               #          count depends on the policy
+                               #          version. Verification uses
+                               #          the actual count, not this
+                               #          nominal value, so a small
+                               #          drift (±5 %) does not fail
+                               #          the check.
+  soundness_error_target: "2^-128"
+                               # [thesis] Table 15. Conventional
+                               #          threshold.
+  soundness_error_measured: "2^-132"
+                               # [thesis] Table 15. Measured value,
+                               #          below the conventional
+                               #          threshold (in the sound
+                               #          direction).
+  soundness_numeric_measured: 1.8346e-40
+                               # [derived] 2^-132 as a Python float,
+                               #            for the verification
+                               #            script (which cannot
+                               #            parse "2^-132" as YAML
+                               #            syntax directly).
+  assumption: |
+    Soundness rests on the q-SDH-type assumption in the pairing-
+    friendly elliptic-curve group over which Groth16 is instantiated,
+    together with the Fiat–Shamir transformation in the random-oracle
+    model (§4.23). The artifact does NOT claim unconditional forgery
+    resistance. See REPRODUCIBILITY_CHECKLIST.md §9 item 2.
+
+
+# ─── FRI-based STARK ──────────────────────────────────────────────────────
+# §4.17, §4.18. Transparent verification path; no trusted setup. The
+# Merkle-tree commitment (Eq. 52) is a hash-based commitment over the
+# evaluations of the low-degree-extended polynomial. Proof size and
+# verification time for a FRI-based STARK depend on the blowup factor,
+# the number of queries and the hash function; the values below are
+# the ones used in the reported artifact.
+stark:
+  scheme: "fri_stark"          # [thesis] §4.17.
+  blowup_factor: 4             # [default] Standard FRI blowup.
+  num_queries: 20              # [default] Standard FRI query count for
+                               #           the target soundness error.
+  hash_function: "sha256"      # [thesis] §4.17 (§Eq. 52 uses a hash-
+                               #          based Merkle root).
+
+
+# ─── Circuit ─────────────────────────────────────────────────────────────
+# §4.15.1. The attestation predicate phi, compiled from the resolver's
+# security policy. The committed artifact ships a reference predicate
+# (resolver public key matches the expected value; attested behavioral
+# claims match the expected policy). Modifying the predicate changes
+# the constraint count and therefore the proof-generation time, which
+# is why the predicate is versioned here.
+circuit:
+  predicate_name: "resolver_policy_v1"
+                               # [default] Identifier recorded in the
+                               #           proof's public inputs.
+  r1cs_compiler: "reference"   # [default] The reference pure-Python
+                               #           R1CS compiler; alternative
+                               #           compilers are out of scope
+                               #           for the 74-file plan.
+  qap_builder: "reference"     # [default] Matches the R1CS compiler.
+
+
+# ─── Timing and size targets ─────────────────────────────────────────────
+# Table 15. The `_target` values are the upper bounds the chapter
+# reports; the `_measured` values are the reported measurements.
+# `verification_script.py` compares its own measured values against the
+# committed expected values (Files 20c, 20i) with `rtol = 0.05` for
+# the timing rows (see REPRODUCIBILITY_CHECKLIST.md §8).
+timing_targets:
+  proof_generation_ms: 500     # [thesis] Table 15 (target).
+  proof_generation_measured_ms: 432
+                               # [thesis] Table 15 (measured).
+  verification_ms: 100         # [thesis] Table 15 (target).
+  verification_measured_ms: 78 # [thesis] Table 15 (measured).
+  proof_size_kb: 2             # [thesis] Table 15 (target).
+  proof_size_measured_kb: 1.8  # [thesis] Table 15 (measured).
+  verify_against_targets: true # [default] If true, the reproduction
+                               #           script flags a measured
+                               #           value that exceeds its
+                               #           target. The artifact
+                               #           reports both regardless.
+
+
+# ─── Seed ────────────────────────────────────────────────────────────────
+seed:
+  zk_seed: 42                  # [default] Groth16 is deterministic for
+                               #           a fixed R1CS and witness, so
+                               #           this seed affects only the
+                               #           reference QAP evaluation
+                               #           points. Kept for symmetry
+                               #           with the other components.
