@@ -1,0 +1,276 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# requirements.txt — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   README.md                       (File 1 of 74)
+#   REPRODUCIBILITY_CHECKLIST.md    (File 2 of 74)
+#   LICENSE                         (File 3 of 74)
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343   (Neural Networks, April 2026)
+# Python version: 3.11  (see Dockerfile / environment.yml)
+# License:        MIT (this file, as part of the artifact's source code)
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Pin discipline
+# ───────────────────────────────────────────────────────────────────────────
+# Every pin below is the exact version that was used to produce the
+# committed expected outputs in `expected_outputs/` (Tables 13–17,
+# 17a and Figures 7–10 of Chapter 4). If a package is upgraded,
+# reinstalled from a rolling channel, or replaced by a system copy,
+# a numeric output may drift outside the strict tolerance defined in
+# `REPRODUCIBILITY_CHECKLIST.md` §8 and `verification_script.py` will
+# report a mismatch. Do not use `>=`, `~=`, `.*`, or unpinned specifiers
+# in this file; the entire point of the artifact is that the pins are
+# reproducible.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# CPU vs GPU
+# ───────────────────────────────────────────────────────────────────────────
+# The default `pip install -r requirements.txt` installs CPU-only wheels.
+# That is sufficient for:
+#   • toy mode                 (README §3)
+#   • the Intel Loihi 2 and NVIDIA A100 simulators
+#     (src/hardware_simulation/loihi_mock.py, a100_emulation.py)
+#   • Tables 15, 17, 17a and Figures 7–10
+#
+# For the *full-mode* reproduction of Tables 13, 14, 16 and Figures 8–10
+# on real A100 hardware, install the CUDA build of torch:
+#
+#   pip install \
+#     --extra-index-url https://download.pytorch.org/whl/cu121 \
+#     torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1
+#
+# The CUDA build and the CPU build have the same numerical behaviour
+# for all operations this artifact uses; the difference is wall-clock
+# only. The expected outputs are committed from the CPU path, and the
+# verification tolerance (rtol = 0.01 for Table 16 accuracy) covers the
+# small drift between CPU and GPU floating-point order.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Proprietary hardware — NOT listed in this file
+# ───────────────────────────────────────────────────────────────────────────
+# Intel Loihi 2 (Lava / NxSDK), NVIDIA A100 (driver + CUDA toolkit), and
+# IBM TrueNorth (Compass / Eedn) SDKs are proprietary. They are NOT
+# redistributable and are NOT listed below. The artifact ships calibrated
+# software simulators in `src/hardware_simulation/` that reproduce the
+# reported behaviour of Loihi 2 and A100 within the tolerances in
+# `REPRODUCIBILITY_CHECKLIST.md` §5. IBM TrueNorth was not used in any
+# experiment reported in Chapter 4 (§4.24.1) and is explicitly *not*
+# simulated.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Binary / build dependencies
+# ───────────────────────────────────────────────────────────────────────────
+# Three packages pull a compiled extension or depend on a system binary:
+#
+#   • gudhi 3.10.0      — C++ backend for persistent homology. Pre-built
+#                         wheels exist for Linux x86_64 / macOS arm64 /
+#                         Windows; on other platforms `pip install gudhi`
+#                         builds from source and needs `cmake` and a C++
+#                         toolchain.
+#   • ripser 0.6.12     — Cython extension for fast Vietoris–Rips. Pre-
+#                         built wheels exist for the same platforms.
+#   • graphviz 0.20.3   — Python bindings ONLY. The `dot` binary must be
+#                         installed separately by the OS package manager
+#                         (`apt-get install graphviz`, `brew install
+#                         graphviz`, or the official MSI on Windows).
+#                         Figure 7 of Chapter 4 requires the binary; the
+#                         other figures are rendered by matplotlib and do
+#                         not need it.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Pinning is transitive but not exhaustive
+# ───────────────────────────────────────────────────────────────────────────
+# Some pins below are transitive dependencies of the visible packages
+# (e.g. `urllib3` is needed by `requests`). They are pinned explicitly so
+# that a security advisory on an upstream patch cannot silently upgrade
+# the runtime. See the inline comment next to each such pin.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+# ─── 1. Core numerical stack ────────────────────────────────────────────────
+# Used by: src/utils/math_utils.py (Eqs. 32–67), src/models/tda_detector.py,
+#          src/models/snn_detector.py, src/models/homomorphic_inference.py,
+#          src/attacks/*, every script under scripts/reproduce_*.
+#
+# These four packages are the numerical substrate of the entire artifact.
+# They are pinned to the exact versions that produced the committed
+# expected outputs. Do not substitute a system copy.
+
+numpy==1.26.4            # ndarray, linear algebra, sampling; used everywhere
+scipy==1.13.1            # special functions (Wasserstein, KL, RDP accountant)
+pandas==2.2.2            # 47-column feature schema, CSV read/write
+scikit-learn==1.5.0      # metrics, train/test split utilities, calibration
+
+
+# ─── 2. Machine-learning core ───────────────────────────────────────────────
+# Used by: src/models/federated_learning.py (Eqs. 35–39),
+#          src/models/snn_detector.py (Eqs. 43–46),
+#          src/baselines/centralized_ml.py (CNN-LSTM baseline for Table 14).
+#
+# torch 2.3.1 is the version pinned for the CPU path. The CUDA wheel of the
+# same version can be installed with `--extra-index-url` as documented above.
+# torchvision and torchaudio are pinned to the matching 0.18.1 / 2.3.1
+# releases; they must not be upgraded independently of torch.
+
+torch==2.3.1             # tensors, autograd, federated + CNN-LSTM training
+torchvision==0.18.1      # torch 2.3.1 compatible
+torchaudio==2.3.1        # torch 2.3.1 compatible (unused by default; kept for
+                         # the torch metapackage consistency)
+joblib==1.4.2            # parallel map / checkpointing for federated rounds
+
+
+# ─── 3. Topological data analysis ───────────────────────────────────────────
+# Used by: src/models/tda_detector.py (Eqs. 40–42),
+#          src/utils/math_utils.py (Eqs. 40–42),
+#          scripts/reproduce_tables/table_17_tda_validation.py.
+#
+# gudhi is the reference implementation of Vietoris–Rips and persistence
+# diagrams; ripser is a faster drop-in used for the 1,000-resample
+# significance tests of §4.8.1; persim renders and compares persistence
+# diagrams (Wasserstein, bottleneck).
+
+gudhi==3.10.0            # Vietoris–Rips filtration, persistence, Betti numbers
+ripser==0.6.12           # faster VR for the significance-test loop
+persim==0.3.7            # persistence diagram metrics and plotting
+
+
+# ─── 4. Spiking neural networks ─────────────────────────────────────────────
+# Used by: src/models/snn_detector.py (Eqs. 43–46),
+#          src/utils/math_utils.py (Eqs. 43–46),
+#          src/hardware_simulation/loihi_mock.py.
+#
+# snntorch provides the LIF and STDP building blocks used to validate the
+# hand-written implementation in snn_detector.py. brian2 is listed as an
+# alternative SNN simulator (it is not on the default code path but is
+# referenced in the blueprint and is useful if the user wants to cross-
+# check the spike trains). Neither package pulls a hardware SDK; both run
+# on CPU.
+
+snntorch==0.9.1          # LIF / STDP reference implementation
+brian2==2.7.1            # alternative SNN simulator (cross-check only)
+
+
+# ─── 5. Graph operations ────────────────────────────────────────────────────
+# Used by: src/models/tda_detector.py (Rips complex construction),
+#          src/utils/math_utils.py (Wasserstein between persistence
+#          diagrams is a graph-matching problem in the discrete case).
+
+networkx==3.3            # graph construction, shortest paths, matching
+
+
+# ─── 6. Cryptography and zero-knowledge ─────────────────────────────────────
+# Used by: src/models/homomorphic_inference.py (Eqs. 58–60),
+#          src/models/zk_attestation.py (Eqs. 50–52, 61–62),
+#          scripts/reproduce_tables/table_15_zk_attestation.py.
+#
+# pycryptodome provides AES-GCM (used in the DP-SGD noise generation path
+# and in the self-healing trust fabric) and SHA-256 (used in the FRI
+# commitment of Eq. 52).
+#
+# py_ecc provides BN128 elliptic-curve pairing groups. The Groth16 proof
+# in Table 15 is generated by a reference implementation over BN128 built
+# on py_ecc. This artifact does NOT re-implement bilinear pairings; it
+# uses py_ecc's published pairing primitives directly, so that the
+# 432 ms / 78 ms / 1.8 KB figures in Table 15 are produced by a well-
+# audited implementation rather than by an unverified hand-rolled one.
+#
+# py-solc-x is OPTIONAL. It is listed because the blueprint mentions a
+# Solidity circuit-compilation path for Groth16. The default artifact
+# path uses the pure-Python R1CS→QAP route described in §4.16 and does
+# NOT require py-solc-x. Install it only if you intend to swap in a
+# Solidity-based circuit.
+
+pycryptodome==3.20.0     # AES-GCM, SHA-256, HMAC
+py_ecc==6.0.1            # BN128 pairing groups for Groth16 (see note above)
+py-solc-x==2.0.3         # OPTIONAL Solidity circuit path (not on default path)
+
+
+# ─── 7. Plotting and figures ────────────────────────────────────────────────
+# Used by: scripts/reproduce_figures/figure_7_architecture.py,
+#          figure_8_threat_vectors.py, figure_9_privacy_tradeoff.py,
+#          figure_10_mitigation_privacy.py.
+#
+# Figure 7 is rendered by Graphviz. The `graphviz` PyPI package is bindings
+# only; the system `dot` binary must be installed separately (see the
+# Binary / build dependencies block at the top of this file). Figures 8–10
+# are rendered by matplotlib and do not require the system binary.
+
+matplotlib==3.9.0        # Figures 8, 9, 10 (and helper overlays in Figure 7)
+seaborn==0.13.2          # statistical plotting helpers for Figures 8–10
+graphviz==0.20.3         # Figure 7 schematic (requires the `dot` binary)
+
+
+# ─── 8. Data engineering ────────────────────────────────────────────────────
+# Used by: data/download_datasets.py (Zenodo + CIC-DoH2023 fetch),
+#          data/preprocess_zenodo.py (parallel preprocessing of the 32 GB
+#          corpus, §6.13 equivalent on the PAFA-DoH side),
+#          data/preprocess_doh2023.py, data/split_data.py.
+#
+# dask is the parallel-preprocessing engine. requests fetches the Zenodo
+# archive and the CIC-DoH2023 bundle. urllib3 is pinned explicitly because
+# requests allows a range of urllib3 versions and a recent CVE affects
+# versions below the pin.
+
+dask==2024.6.0           # 32 GB corpus preprocessing (chunked, multi-worker)
+requests==2.32.3         # dataset download (Zenodo DOI, CIC-DoH2023)
+urllib3==2.2.2           # transitive pin for requests (security); pinned
+                         # explicitly so a future upstream CVE cannot pull
+                         # in an unpinned upgrade
+
+
+# ─── 9. Utilities, logging and reproducibility ──────────────────────────────
+# Used by: src/utils/seed.py, src/utils/logger.py, src/utils/metrics.py,
+#          every script under scripts/ and src/cli_tools/.
+#
+# PyYAML is the configuration parser for configs/*.yaml (all eight files
+# in the config layer). tqdm provides the progress bars used by the
+# federated-training loop and by the 1,000-resample TDA significance test.
+# packaging exposes the exact version-comparison logic used by the
+# reproducibility verifier. psutil reports CPU / memory usage in the
+# logging metadata of each run.
+
+PyYAML==6.0.1            # configs/*.yaml parser
+tqdm==4.66.4             # progress bars (federated rounds, TDA resamples)
+packaging==24.1          # version comparison for verification_script.py
+psutil==6.0.0            # CPU / memory telemetry in the run logs
+
+
+# ─── 10. Testing ────────────────────────────────────────────────────────────
+# Used by: tests/ (Files 21a–21d).
+#
+# pytest is the test runner; pytest-cov produces the coverage report used
+# during artifact review. Neither package is imported by `src/` or by
+# `scripts/`, so the artifact runs without them; they are listed here so
+# that a fresh `pip install -r requirements.txt` gives the reviewer a
+# test-ready environment.
+
+pytest==8.2.2            # test runner for tests/test_*.py
+pytest-cov==5.0.0        # coverage report (optional; used in review)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# End of requirements.txt
+#
+# Cross-reference — thesis sections fed by each group:
+#
+#   §4.4       architectural framework      ← group 1, 7 (Figure 7)
+#   §4.6       adversarial federated learning ← group 1, 2
+#   §4.7–4.8   topological data analysis    ← group 3
+#   §4.9–4.12  spiking neural network       ← group 4
+#   §4.13–4.14 AI-obfuscated cryptography   ← group 6
+#   §4.15–4.18 zero-knowledge attestation   ← group 6
+#   §4.19      self-healing trust fabric    ← group 1, 6
+#   §4.21–4.22 homomorphic inference + DP   ← group 1, 6
+#   §4.25      neuromorphic vs GPU          ← group 2, 4
+#   §4.26      attack simulation suite      ← group 1, 2, 8
+#   §4.27–4.28 TDA + federated validation   ← group 1, 3
+#   §4.29–4.30 ZK attestation + comparison  ← group 6, 7
+#
+# Verification: `python expected_outputs/verification_script.py` must exit
+# 0 (toy mode: --toy-mode). See REPRODUCIBILITY_CHECKLIST.md §8 for the
+# per-file tolerances.
+# ═══════════════════════════════════════════════════════════════════════════
