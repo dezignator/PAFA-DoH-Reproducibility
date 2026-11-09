@@ -1,0 +1,114 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# CHECKSUMS.txt — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   README.md                       (File 1 of 74)
+#   REPRODUCIBILITY_CHECKLIST.md    (File 2 of 74)  — §6 (dataset dep. map)
+#   LICENSE                         (File 3 of 74)  — §2 (CC-BY 4.0 note)
+#   configs/default_pafa_config.yaml (File 9)        — datasets.* block
+#   data/data_utils.py               (File 10a)      — verify_checksums()
+#   data/download_datasets.py        (File 10b)      — downloader + verifier
+#   data/README_data.md              (File 10g)      — §6 "Checksum verification"
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343   (Neural Networks, April 2026)
+# License:        MIT (this file, as part of the artifact's source code)
+# Artifact version: 1.0.0
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# STATUS: TEMPLATE
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# The two active records below are COMMENTED OUT. On the committed tree,
+# the file contains ZERO active records, which means:
+#
+#   • `python data/download_datasets.py verify` runs, reads this file,
+#     finds no records, and exits 0 with a warning that zero files were
+#     verified. It does NOT verify anything — the manifest is a template.
+#
+#   • The `verify_all()` step in `download_datasets.py all` and the
+#     `toy` sub-command are similarly no-ops for checksum verification.
+#     The toy demo (`toy` sub-command and README §3) does not download
+#     anything and does not need this file.
+#
+#   • The full pipeline (README §5) will download the two datasets
+#     and the user is responsible for filling in the digests below and
+#     then committing the populated file. The two active records are
+#     the ones that must be filled in.
+#
+# This is the honest state of a reproducibility artifact before the
+# maintainer has run the full pipeline once and recorded the digests.
+# Shipping placeholder digests (e.g. "PENDING") would make the file
+# fail loudly on every run, which is worse than shipping a clear,
+# self-documenting template.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# What to fill in, and how
+# ───────────────────────────────────────────────────────────────────────────
+# Record format (one record per line, POSIX `sha256sum`-compatible):
+#
+#     <sha256-hex-digest>  <relative-path-from-data/raw>
+#
+# The separator is EXACTLY two spaces. Blank lines and lines beginning
+# with `#` are ignored by `data_utils.verify_checksums()`.
+#
+# To populate a record after a trusted download:
+#
+#   1. Download the file(s) via `python data/download_datasets.py zenodo`
+#      and/or `python data/download_datasets.py cic_doh2023`.
+#
+#   2. For each file under `data/raw/zenodo/` and `data/raw/cic_doh2023/`,
+#      compute its SHA-256:
+#
+#        # Linux / macOS
+#        sha256sum data/raw/zenodo/<filename>
+#
+#        # Windows (PowerShell)
+#        Get-FileHash -Algorithm SHA256 data/raw/zenodo/<filename>
+#
+#   3. Uncomment (remove the leading `# `) the corresponding record
+#      below, paste the digest, and keep the path relative to
+#      `data/raw/`. Example:
+#
+#        a3f9c1e8b7d6...   zenodo/record_files.tar.zst
+#
+#   4. Commit the populated file. Future downloads of the SAME DOI
+#      will then be verified against these digests automatically.
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Files to record (fill in once, after the first trusted download)
+# ───────────────────────────────────────────────────────────────────────────
+#
+# The Zenodo record (DOI 10.5281/zenodo.5957677) contains one or more
+# files. Its file list is published by the Zenodo API at
+# https://zenodo.org/api/records/5957677 (the "files" array). Record
+# each one you downloaded.
+#
+# CIC-DoH2023 (https://www.unb.ca/cic/datasets/dohbrw-2023.html) ships
+# as multiple CSV files behind a landing page. Record each one you
+# extracted into data/raw/cic_doh2023/.
+#
+# Two records are shown below, COMMENTED OUT, one for each dataset,
+# so the format is unambiguous. Replace the placeholder filenames with
+# the actual filenames you downloaded and fill in the digests.
+#
+# <sha256-of-zenodo-file>          zenodo/<filename-from-record>
+# <sha256-of-cic-doh2023-file>     cic_doh2023/<filename-from-bundle>
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Why this file is checked in
+# ───────────────────────────────────────────────────────────────────────────
+# The SHA-256 manifest is the only way a reviewer can prove that the
+# 32 GB corpus they downloaded is the 32 GB corpus the expected
+# outputs were produced against, without trusting the network, the
+# CDN, or the DOI registry. See `data/README_data.md` §6 for the
+# full rationale, including what a mismatch means and does not mean.
+#
+# Note that this artifact does NOT redistribute either dataset
+# (LICENSE §2). The checksums let you verify what you downloaded; they
+# do not give you a copy.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# End of CHECKSUMS.txt (template)
+# ═══════════════════════════════════════════════════════════════════════════
