@@ -1,0 +1,149 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# homomorphic_params.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   configs/default_pafa_config.yaml    (File 9, master config)
+#   README.md, REPRODUCIBILITY_CHECKLIST.md, LICENSE
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343
+# License:        MIT
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# Configures the Ring-LWE homomorphic-inference layer and the DP
+# inference accountant. Consumed by:
+#
+#   src/models/homomorphic_inference.py   (File 12f)
+#   src/utils/math_utils.py               (File 11f) — Eqs. 58, 59, 60
+#   src/cli_tools/zk_cli.py               (File 15e) — shared accountant
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Where each value comes from in the chapter
+# ───────────────────────────────────────────────────────────────────────────
+#   scheme.n, scheme.q       → Table 17a ("Ring-LWE (n=256, q=4096)")
+#   scheme.security_target   → §4.21
+#   operations               → §4.21
+#   dp_inference.*           → §4.22, Eq. 59–60
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+
+
+# ─── Ring-LWE encryption scheme ──────────────────────────────────────────
+# §4.21, Eq. 58. Standard Ring-LWE encryption. The artifact applies
+# the published scheme; no new encryption scheme is proposed. The
+# parameters n=256, q=4096 are the ones listed in Table 17a and used
+# for the reported Table 16 results.
+scheme:
+  scheme: "ring_lwe"           # [thesis] §4.21.
+  n: 256                       # [thesis] Table 17a. Ring dimension.
+  q: 4096                      # [thesis] Table 17a. Ciphertext modulus.
+  error_distribution: "discrete_gaussian"
+                               # [thesis] §4.21.
+  error_sigma: 3.2             # [default] Standard deviation of the
+                               #           discrete Gaussian; chosen so
+                               #           that the decryption failure
+                               #           probability is below 2^-40 at
+                               #           the pinned (n, q).
+  plaintext_modulus: 2         # [thesis] §4.21 (binary plaintext space
+                               #          R_2).
+  security_target_bits: 128    # [thesis] §4.21. Under the standard
+                               #          lattice-estimator
+                               #          heuristics; the estimator's
+                               #          output is recorded in
+                               #          outputs/logs/ at load time.
+
+
+# ─── Allowed operations ─────────────────────────────────────────────────
+# §4.21. The scheme is additively homomorphic and supports a bounded
+# number of multiplications; the bound is the circuit's multiplicative
+# depth. Operations beyond this list are rejected by the evaluator
+# (fail-closed). Do NOT extend this list without re-evaluating the
+# multiplicative-depth budget below.
+operations:
+  - "add"                      # [thesis] §4.21.
+  - "multiply_bounded"         # [thesis] §4.21. Bounded by the circuit
+                               #          depth below.
+
+
+# ─── Circuit ─────────────────────────────────────────────────────────────
+# §4.21. The detection function evaluated on the ciphertext is a
+# statistical test plus a bounded-depth classifier; the committed
+# expected outputs use depth 8 (see the blueprint "Circuit depth
+# limits max_multiplicative_depth: 8").
+circuit:
+  max_multiplicative_depth: 8  # [default] Committed depth. Raising it
+                               #           requires re-verifying the
+                               #           noise budget at load time
+                               #           (the loader checks
+                               #           noise_budget_depth_ok).
+  noise_budget_depth_ok: true  # [derived] Set at load time by the
+                               #           evaluator: if the requested
+                               #           depth exceeds what the
+                               #           pinned (n, q, sigma) can
+                               #           support within the
+                               #           decryption-failure
+                               #           probability, the loader
+                               #           raises ValueError.
+
+
+# ─── DP inference ────────────────────────────────────────────────────────
+# §4.22, Eqs. 59–60. DP is applied on top of the (already private)
+# homomorphic computation to bound the influence of any single training
+# record on the released model update. The accountant is the same RDP
+# moments accountant as in fl_dp_params.yaml (File 9b); it is
+# duplicated here so that the homomorphic layer can be replayed
+# independently.
+dp_inference:
+  method: "dp_sgd"             # [thesis] §4.22.
+  mechanism: "gaussian"        # [thesis] §4.22.
+  composition: "rdp_accountant"
+                               # [thesis] Eq. 60.
+  rdp_orders:                  # [default] Same grid as File 9b.
+    - 1.25
+    - 1.5
+    - 1.75
+    - 2
+    - 2.5
+    - 3
+    - 4
+    - 5
+    - 6
+    - 8
+    - 10
+    - 16
+    - 32
+    - 64
+
+
+# ─── Security note ───────────────────────────────────────────────────────
+# §4.21 and §4.23. The Ring-LWE scheme is IND-CPA under the decisional
+# Ring-LWE assumption. It is NOT IND-CCA2, and the artifact does not
+# claim it is: homomorphic schemes are malleable by design, and
+# ciphertext integrity in PAFA-DoH comes from the authenticated
+# transport (TLS 1.3 for DoH; QUIC with TLS 1.3 for DoQ), not from the
+# homomorphic layer.
+security_note:
+  ind_cpa: true                # [thesis] §4.21.
+  ind_cca2: false              # [thesis] §4.23.
+  integrity_source: "authenticated_transport_tls13"
+                               # [thesis] §4.23.
+  integrity_transport_protocols:
+    - "TLS 1.3 (DoH)"
+    - "QUIC + TLS 1.3 (DoQ)"
+  note: |
+    The 128-bit post-quantum target is a parameter-selection target
+    under standard lattice-estimator heuristics; it is NOT a proof of
+    resistance to all quantum algorithms. See
+    REPRODUCIBILITY_CHECKLIST.md §9 items 3 and 6.
+
+
+# ─── Seed ────────────────────────────────────────────────────────────────
+seed:
+  he_seed: 42                  # [default] Consumed by File 12f for
+                               #           the per-sample error vector
+                               #           draws.
