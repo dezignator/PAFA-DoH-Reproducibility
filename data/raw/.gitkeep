@@ -1,0 +1,4 @@
+# This file pins the data/raw/ directory in git.
+# Downloaded datasets land here; see ../README_data.md §4 and §5.
+# Committed to git so that a fresh clone has the empty directory the
+# downloader (data/download_datasets.py) writes into.
