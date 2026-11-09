@@ -1,0 +1,120 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# baselines_config.yaml — PAFA-DoH Reproducibility Artifact
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Companion to:
+#   configs/default_pafa_config.yaml    (File 9, master config)
+#   README.md, REPRODUCIBILITY_CHECKLIST.md, LICENSE
+#
+# Thesis chapter: Chapter 4 (PAFA-DoH)
+# Citation DOI:   10.1016/j.neunet.2025.108343
+# License:        MIT
+# Artifact version: 1.0.0
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Purpose
+# ───────────────────────────────────────────────────────────────────────────
+# Configures the two experimental baselines against which PAFA-DoH is
+# compared in §4.30 and Table 14. Consumed by:
+#
+#   src/baselines/centralized_ml.py        (File 13b)
+#   src/baselines/rule_based.py            (File 13c)
+#   scripts/train_baselines.py             (File 17b)
+#   scripts/reproduce_tables/table_14_attack_metrics.py (File 18b)
+#
+# The baselines are run in *full* mode only; in toy mode they are
+# skipped (the toy demo runs PAFA-DoH only).
+#
+# ───────────────────────────────────────────────────────────────────────────
+# Where each value comes from in the chapter
+# ───────────────────────────────────────────────────────────────────────────
+#   centralized_ml.*           → §4.30.1 (comparison with centralized AI)
+#   rule_based.*               → §4.30.3 (comparison with rule-based
+#                                 detection) and the rules stated in §4.7
+#   reported_baselines.*       → Table 14
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+
+
+# ─── Centralized CNN-LSTM baseline ──────────────────────────────────────
+# §4.30.1. Reproduced on the same data, the same preprocessing and the
+# same tuning budget as PAFA-DoH, per the thesis design commitment in
+# §1.3 (the baseline figures are labeled "reproduced" in Table 2).
+centralized_ml:
+  model: "cnn_lstm"            # [thesis] §4.30.1 (the centralized
+                               #          pipeline is described as
+                               #          "centralized machine-learning
+                               #          pipeline"; the specific
+                               #          architecture is the CNN-LSTM
+                               #          used in §4.30.1).
+  learning_rate: 0.001         # [default] Standard Adam default for the
+                               #           reproduced baseline.
+  batch_size: 64               # [default] Matches PAFA-DoH batch size so
+                               #           that the tuning budget is the
+                               #           same.
+  num_epochs: 50               # [default] Enough for the CNN-LSTM to
+                               #           converge on the 32 GB corpus;
+                               #           the baseline is not tuned
+                               #           past this point (matching
+                               #           PAFA-DoH's early-stopping
+                               #           behavior for fairness).
+  early_stopping_patience: 10  # [default] Matches the "same tuning
+                               #           budget" commitment.
+  reported_centralized_accuracy: 0.921
+                               # [thesis] §4.30.1 ("92.1 detection
+                               #          accuracy").
+  reported_centralized_fpr: 0.018
+                               # [thesis] §4.30.1 ("1.8 % false-positive
+                               #          rate").
+
+
+# ─── Rule-based baseline ────────────────────────────────────────────────
+# §4.30.3. The rule-based detector uses the thresholds stated in the
+# chapter and in §4.7 (entropy > 4.2 bits; autocorrelation at lag 5
+# > 0.8; etc.). It is the simplest baseline and exists to anchor the
+# "traditional detection" comparison.
+rule_based:
+  dns_tunneling_rules:         # [thesis] §4.30.3 / §4.7.
+    - "entropy > 4.2 bits"
+    - "autocorr(inter_query, lag=5) > 0.8"
+  side_channel_rules:          # [thesis] §4.30.3.
+    - "timing_variance > threshold"
+  c2_beacon_rules:             # [thesis] §4.26.4.
+    - "regular_beaconing_interval > 0.9"
+  reported_rule_based_accuracy: 0.78
+                               # [thesis] §4.30.3 ("78 % detection").
+  reported_rule_based_fpr: 0.05
+                               # [thesis] §4.30.3 ("false-positive rate
+                               #          above 5 %").
+
+
+# ─── Reported baseline rates (Table 14) ─────────────────────────────────
+# These are the reported PAFA-DoH detection rates per attack family, not
+# the baseline rates. They live here rather than in
+# default_pafa_config.yaml so that anyone tuning the baselines sees the
+# PAFA-DoH targets side-by-side. The verification script compares the
+# freshly generated Table 14 against the committed expected file
+# (expected_outputs/table_14_expected.json, File 20b); the values below
+# are the reported targets, and a reproduction that differs from them by
+# more than the tolerance in REPRODUCIBILITY_CHECKLIST.md §8 fails.
+reported_baselines:
+  dns_tunneling_detection_rate: 0.995
+                               # [thesis] Table 14 ("99.5 %").
+  c2_heartbeat_detection_rate: 0.987
+                               # [thesis] Table 14 ("98.7 %").
+  side_channel_detection_rate: 1.000
+                               # [thesis] Table 14 ("100 %"). This is a
+                               #          categorical statement ("no
+                               #          key recovery succeeded in
+                               #          the evaluated ChipWhisperer
+                               #          runs"), not a rate over a
+                               #          sample; see §4.26.3.
+
+
+# ─── Seed ────────────────────────────────────────────────────────────────
+seed:
+  baseline_seed: 42            # [default] Must equal
+                               #           default_pafa_config.yaml::seed.
+                               #           Consumed by File 13b for weight
+                               #           initialization.
