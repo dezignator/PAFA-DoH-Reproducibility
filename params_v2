@@ -1,0 +1,27 @@
+# Parameters stated in the thesis text (Chapter 4). null = not stated in the
+# thesis; must come from run logs (see run_manifest_v2.yaml).
+dp:
+  epsilon: 1.2          # Sec 4.6.2, Table 16
+  clip_C: 3.5           # Table 17a
+  delta: null           # Sec 4.22: "selected delta", value not stated
+  sigma: null           # Sec 4.22
+  rounds_T: null        # Sec 4.22
+  clients_K: null
+federated:
+  convergence_epochs: 8     # Table 16
+  max_dropout: 0.20         # Sec 4.28.1
+snn:
+  stdp_tau_plus_ms: 20.0    # Sec 4.11
+  stdp_tau_minus_ms: 20.0
+  loihi_cores: 128          # Sec 4.24.1
+  neurons_per_core: 1024
+ring_lwe:
+  n: 256                    # Table 17a
+  q: 4096
+  claimed_pq_security_bits: 128
+  symmetric_key_bits: 256   # Sec 4.21
+zk:
+  groth16_constraints_approx: 100000   # Table 17a ("approximately 10^5")
+  proof_gen_target_ms: 500
+  proof_ver_target_ms: 100
+  proof_size_target_kb: 2.0
