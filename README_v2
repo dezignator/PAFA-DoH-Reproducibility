@@ -1,0 +1,40 @@
+PAFA-DoH Chapter 4: extended artifact (v2)
+Additional material for Chapter 4 (Privacy-Preserving Federated Defense for
+Encrypted DNS). Everything lives under `extended\_v2/` and every file name ends
+in `\_v2`, so nothing here replaces an existing file.
+Layout
+Path	Content
+`pafa\_v2/`	Reference implementations of the numbered equations (Python, numpy/scipy only)
+`tests/`	68 unit tests, analytic cases and cross-checks
+`c/`	C99 LIF population kernel + self-test + CPU benchmark (Sec 4.24.1 layout)
+`js/`	RFC 1035/8484 query codec, subdomain-entropy feature, seeded tunnel corpus (Node >= 18)
+`tables/`	`reported\_values\_v2.yaml` (thesis values, with evidence class) and generated CSV / Markdown / LaTeX
+`latex/`	Standalone build of Tables 13-17a
+`configs/`	`params\_v2.yaml`, `run\_manifest\_v2.yaml` (every value the thesis says is "recorded in the artifact")
+`scripts/`	table generator, consistency checks, manifest validator, TDA pipeline demo, env report, run-all
+`docs/`	equation-to-code map, hardware dependency matrix, threat model, artifact checklist, parameter note
+`docker/`	CPU container recipe
+Quick start
+```bash
+cd extended\_v2
+pip install -r requirements\_v2.txt
+make test              # python + C + node
+make consistency       # arithmetic checks on Tables 13-16
+make tables            # CSV / MD / LaTeX
+bash scripts/run\_all\_v2.sh
+```
+What this does and does not reproduce
+Implements the formulations of Eqs. 36-67 as software references and tests them
+against analytic cases (e.g. LIF inter-spike period, circle H1 bar, R1CS/QAP
+divisibility, Merkle openings, FRI folding, Ring-LWE round trip).
+Does not regenerate hardware figures (Loihi/A100 latency and energy,
+ChipWhisperer SNR). See `docs/HARDWARE\_DEPENDENCY\_MATRIX\_v2.md`.
+`scripts/tda\_pipeline\_demo\_v2.py` runs on synthetic flows. Its output checks the
+pipeline; it is not Table 17.
+`zk\_r1cs\_v2.py` and `merkle\_fri\_v2.py` are didactic: toy circuit, no pairing,
+no trusted setup. Table 15 times come from the Groth16 prover used in the thesis.
+Filling the manifest
+`configs/run\_manifest\_v2.yaml` lists the parameters that Chapter 4 defers to the
+artifact (seeds, split sizes, resamples, SNN encoding constants, FRI blow-up, etc.).
+`python3 scripts/validate\_manifest\_v2.py configs/run\_manifest\_v2.yaml --strict`
+exits non-zero while any entry is `null`.
