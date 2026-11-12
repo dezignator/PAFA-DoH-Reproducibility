@@ -1,0 +1,16 @@
+# Reproducible environment for extended_v2 (CPU only).
+#   docker build -f extended_v2/docker/Dockerfile.v2 -t pafa-doh-v2 extended_v2
+#   docker run --rm pafa-doh-v2
+FROM python:3.12-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential make nodejs git \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/pafa
+COPY requirements_v2.txt .
+RUN pip install --no-cache-dir -r requirements_v2.txt
+COPY . .
+
+ENV PYTHONHASHSEED=0
+CMD ["bash", "scripts/run_all_v2.sh"]
