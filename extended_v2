@@ -1,0 +1,16 @@
+CC      ?= cc
+CFLAGS  ?= -O2 -std=c99 -Wall -Wextra
+
+lif_kernel_v2: lif_kernel_v2.c
+	$(CC) $(CFLAGS) -o $@ $< -lm
+
+test: lif_kernel_v2
+	./lif_kernel_v2 --selftest
+
+bench: lif_kernel_v2
+	./lif_kernel_v2 --bench 128 1024 500
+
+clean:
+	rm -f lif_kernel_v2
+
+.PHONY: test bench clean
