@@ -1,0 +1,17 @@
+Artifact checklist (v2)
+Modelled on the usual three-level artifact review: available, functional, results reproduced.
+Available
+[x] Public repository, tagged release recommended (`git tag v2.0.0`)
+[ ] Archived snapshot with a DOI (Zenodo GitHub integration)
+[ ] LICENSE file at repository root
+Functional
+[x] `make test` runs Python (68 tests), C self-test and Node tests
+[x] `scripts/consistency_checks_v2.py` verifies the arithmetic in Tables 13-16
+[x] `scripts/generate_tables_v2.py` regenerates CSV / Markdown / LaTeX for Tables 13-17a
+[x] Dependencies pinned by lower bound in `requirements_v2.txt`
+[ ] Container image built and tagged (`docker/Dockerfile.v2`)
+Results reproduced
+[ ] `configs/run_manifest_v2.yaml` filled from logs; `validate_manifest_v2.py --strict` exits 0
+[ ] Benign sample count in the manifest >= ~30,000 if "FPR < 0.01 %" is to be certified (see `metrics_v2.min_negatives_for_fpr_bound`)
+[ ] Per-run raw outputs committed (seeds, split sizes, resamples) so each Table 14-17 cell can be recomputed
+[ ] Hardware-bound figures labelled as such (see `HARDWARE_DEPENDENCY_MATRIX_v2.md`)
