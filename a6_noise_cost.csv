@@ -1,0 +1,4 @@
+attack duty cycle,static x50 injected power,adaptive injected power,saving,V_th idle/alert (Eq. 48)
+1%,2500,31,98.8%,1.00/1.80
+5%,2500,131,94.8%,1.00/1.80
+20%,2500,505,79.8%,1.00/1.80

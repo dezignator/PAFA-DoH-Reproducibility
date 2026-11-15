@@ -1,0 +1,6 @@
+parameter set,n,q,sigma,BKZ beta,core-SVP classical (bits),core-SVP quantum (bits)
+thesis Table 17a pair,256,4096,3.2,225,65.7,59.6
+n doubled,512,4096,3.2,529,154.5,140.2
+ML-KEM-512-like (calibration),512,3329,1.22,406,118.6,107.6
+ML-KEM-768-like,768,3329,1.0,624,182.2,165.4
+NewHope-1024-like,1024,12289,3.2,1000,292.0,265.0

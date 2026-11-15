@@ -1,0 +1,15 @@
+Chapter 4 item,thesis value,this simulation,reading
+Accuracy at eps=1.2 (Table 16),">= 99.2 % target, 99.4 % achieved",known families 0.9571 ± 0.0554 (K=400),depends on client population; see E6
+Client population needed at eps=1.2,number of clients not stated,K=100: 0.9459 ± 0.0378; K=400: 0.9571 ± 0.0554; K=1600: 0.9999 ± 0.0002,noise on the average falls as 1/K; K is a first-order parameter
+Convergence epochs (Table 16),"8 epochs, target <= 10","FedAvg reaches 95 % (known families) in rounds [2, 2, 4]",easy synthetic task; not comparable in absolute terms
+Dropout resilience (Table 16),97.3 % recovery at up to 20 % dropout,100.00% of 0 %-dropout accuracy at 20 %,FedAvg is insensitive to random absence here
+Byzantine robustness (Sec 4.6.3),"geometric median + cross-check, fraction in 4.28.1","20 % sign-flip: mean 0.1219 ± 0.0411, geomed 1.0000 ± 0.0000, +cross-check 1.0000 ± 0.0000",plain mean collapses; geometric median holds
+Adversarial robustness (Table 16),96.8 % under GAN-crafted queries,"recall@0.5 FGSM: standard 0.2356 ± 0.0856, augmented 0.7296 ± 0.0029","FGSM augmentation, not the thesis GAN; same direction of effect"
+Tunnelling detection (Table 14: 99.5 %),99.5 %,"PAFA fusion 100.0% [98%,100%], FPR 1.067% [0.66%,1.73%]",simulated dnscat2-like traffic
+C2 heartbeat (Table 14: 98.7 %),98.7 %,"PAFA fusion 100.0% [98%,100%]",simulated periodic beacon
+Zero-day / evasive family,'identifying zero-day attacks' (Sec 4.30.3),"mimic: PAFA fusion 18.4% [14%,24%]","hardest family; TDA alone 26.8% [22%,33%], statistical 4.8% [3%,8%]"
+Betti-1 separation (Table 17: 2.1 vs 5.8),2.1 ± 0.3 vs 5.8 ± 1.2,mimic: 0.24 ± 0.50 vs 0.44 ± 0.62 (delay-embedded IAT),"different representation, different scale"
+SNR reduction 98 % (Sec 4.14),98 % (ChipWhisperer),x50 injection: 98.0% by construction; CPA success at n=800: 0.02,model; hardware result not reproduced
+128-bit PQ security of Ring-LWE layer (Sec 4.21),"n=256, q=4096, 128-bit target",core-SVP estimate 65.7 classical / 59.6 quantum bits,parameter pair does not reach the target under this estimate
+Loihi 0.8 ms / 0.12 mJ vs A100 (Table 13),2.6x / 15x,not reproducible without the hardware,CPU numbers in B7 are a baseline only
+Groth16 432 ms / 78 ms / 1.8 KB (Table 15),432 / 78 / 1.8,not reproducible: toy QAP and FRI only,"B2/B3 give scaling shapes, not these times"

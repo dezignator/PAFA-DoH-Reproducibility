@@ -1,0 +1,7 @@
+scenario,behaviour (simulated),thesis section
+benign,"browsing bursts (73 %), periodic telemetry polling (15 %), CDN hash labels (12 %)",-
+tunnel,"dnscat2-like: 28-52 char base32 labels, TXT/CNAME/MX heavy, ~0.15-1 s spacing",4.26.1
+beacon,"C2 heartbeat: 2-10 s period, 4-15 % jitter, short hex labels, constant small payload",4.26.4
+slow_exfil,"low-and-slow: 12-45 s mean spacing, 18-30 char labels, TXT heavy",4.26.1
+mimic,"benign-looking names/sizes/types, hidden cyclic rate modulation (zero-day style)","4.2.1, 4.26.2"
+enum,"subdomain enumeration host0..hostN, sequential, fast (lifecycle phase 4 only)",4.30.4

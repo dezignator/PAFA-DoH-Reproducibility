@@ -1,0 +1,4 @@
+attack,rate_pct,tool,evidence,sw_repro,section
+DNS tunnelling,99.5,dnscat2,tb,partial,4.26.1
+C2 heartbeat,98.7,custom beacon generator,tb,partial,4.26.4
+Side-channel (classical timing/power),100.0,ChipWhisperer,hw,no,4.26.3

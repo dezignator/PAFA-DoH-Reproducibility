@@ -1,0 +1,7 @@
+stage,"us per window (CPU, 1 core)"
+Window feature extraction (17 feats),364.5
+Rule-based,0.1
+Mahalanobis,0.7
+Supervised logistic,0.1
+TDA: embed + H0/H1 + Wasserstein,4482.0
+SNN: encode + 520-step LIF sim (python),6746.4

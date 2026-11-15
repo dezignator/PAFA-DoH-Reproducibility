@@ -1,0 +1,14 @@
+% Standalone build of the generated Chapter 4 tables.
+%   python3 scripts/generate_tables_v2.py && cd latex && pdflatex chapter4_tables_v2.tex
+\documentclass[10pt,a4paper,landscape]{article}
+\usepackage[margin=15mm]{geometry}
+\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage[T1]{fontenc}
+\begin{document}
+\section*{PAFA-DoH Chapter 4: reported values (v2 artifact)}
+Evidence: hw = hardware measurement, tb = software testbed, cfg = configuration or design target.
+sw\_repro: whether the figure can be regenerated without the original hardware.
+
+\input{../tables/generated_v2/chapter4_tables_v2_fragment.tex}
+\end{document}

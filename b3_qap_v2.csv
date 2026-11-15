@@ -1,0 +1,8 @@
+constraints m,R1CS satisfied,QAP divisible,time (ms)
+4,True,True,6.6
+8,True,True,25.6
+16,True,True,140.2
+24,True,True,442.5
+32,True,True,1226.0
+48,True,True,5570.7
+fitted exponent (time ~ m^e),,,e = 2.68

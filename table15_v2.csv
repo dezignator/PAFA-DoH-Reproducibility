@@ -1,0 +1,5 @@
+parameter,target,measured,evidence,sw_repro,section
+Proof generation time,< 500 ms,432 ms,tb,partial,"4.16, 4.27.2"
+Proof verification time,< 100 ms,78 ms,tb,partial,4.27.2
+Soundness error,<= 2^-128,2^-132,cfg,no,4.23
+Proof size,<= 2 KB,1.8 KB,tb,yes,4.27.2

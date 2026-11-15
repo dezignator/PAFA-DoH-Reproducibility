@@ -1,0 +1,59 @@
+# Per-run manifest. Every key below is something Chapter 4 says is
+# "recorded in the reproducibility artifact". The thesis does not state the
+# values; they must be filled from the actual run logs. Section = where the
+# thesis refers to it. Validate with scripts/validate_manifest_v2.py.
+run_id: null
+date_utc: null
+git_commit: null
+hardware: {cpu: null, gpu: null, loihi_system: null, chipwhisperer_target: null}
+seeds: {global: null, permutation_test: null, data_split: null}
+data:
+  zenodo_doi: "10.5281/zenodo.5957677"     # as given in Sec 4.25.1
+  benign_flows_total: null                   # needed to resolve FPR 0.01 %
+  attack_flows_per_family: null              # Table 14 notes
+  split_sizes: {train: null, benign_reference: null, validation: null, test: null}   # 4.7.2
+ns3: {version: null, topology: null}
+dp:                                          # 4.6.2, 4.22
+  epsilon: 1.2
+  delta: null
+  clip_C: 3.5
+  sigma: null
+  rounds_T: null
+  clients_K: null
+  accountant_alphas: null
+  noise_inside_average: null                 # see dp_aggregation_v2.py
+  client_sampling: null
+  smoothness_convexity_assumptions: null     # 4.6.4
+byzantine: {byzantine_fraction: null, weights_w_k: null, cross_check_agreement_threshold: null}   # 4.6.3
+tda:                                         # 4.7, 4.8
+  point_cloud_extra_coordinates: null
+  window_points: null
+  max_filtration_scale: null
+  betti_eval_scale_eps: null
+  wasserstein_order_p: null
+  wasserstein_ground_metric: null
+  threshold_quantile: null
+  threshold_update_schedule: null
+  permutation_resamples: null
+  bonferroni_alpha: 0.05
+snn:                                         # 4.9-4.11
+  encoding: {tau: null, alpha: null, burst_size_N: null}
+  lif: {tau_m: null, v_rest: null, v_th: null, v_reset: null, tau_ref: null, sigma_noise: null}
+  lateral_inhibition: {coefficient: null, radius: null}
+  stdp: {eta: null, tau_plus_ms: 20.0, tau_minus_ms: 20.0, pairing: null, w_min: null, w_max: null}
+sidechannel:                                 # 4.13-4.14, 4.26.3
+  delta_detection_threshold: null
+  n_traces: null
+  attack_models: null
+  controller: {v_th0: null, beta: null, threat_mapping: null}
+  stdp_error_sigma_k: null
+zk:                                          # 4.15-4.18, 4.23
+  circuit: null
+  compiler: null
+  constraints_total: null
+  constraints_per_policy_section: null
+  curve_group: null
+  security_parameter_bits: null
+  n_runs: null
+  fri: {blowup: null, n_queries: null, hash: null}
+  stark: {proof_size_kb: null, verify_ms: null}

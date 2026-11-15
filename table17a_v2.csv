@@ -1,0 +1,9 @@
+component,published,configuration,where
+Federated aggregation,"FedAvg + DP-SGD (Abadi et al., CCS 2016)","eps=1.2, C=3.5, sigma via moments accountant","4.6.2, Eq. 36; 4.28.1, Table 16"
+Byzantine-robust aggregation,"Geometric median, IRLS",weighted geometric median + detector cross-check,"4.6.3, Eq. 38"
+Homomorphic inference,Ring-LWE encryption,"n=256, q=4096, 128-bit PQ target","4.21, Eq. 58"
+SNN detector,LIF neuron + pair-based STDP,"log burst encoding, 3-layer LIF, 20 ms STDP window, Loihi","4.9-4.11, Eqs. 43-46; 4.25, Table 13"
+Topological anomaly detection,"Persistent homology, VR filtration, p-Wasserstein","beta_1, entropy, Wasserstein; Bonferroni","4.7-4.8, Eqs. 40-42; 4.28.2, Table 17"
+ZK attestation,Groth16 zk-SNARK,~1e5 constraints; SNARK and STARK paths,"4.15-4.18, Eqs. 50-52; 4.29, Table 15"
+Side-channel noise injection,Adaptive noise injection,SNN-set amplitude/spectrum; adaptive threshold Eq. 48,"4.13-4.14, Eqs. 47-49; 4.26.3"
+Adversarial training data,GAN-generated synthetic queries,TV regulariser on generator,"4.6.1, Eq. 35; 4.26.2"

@@ -1,0 +1,6 @@
+metric,target,achieved,test,evidence,sw_repro
+Global model accuracy,>= 99.2%,"99.4% (+-0.12%, 95% CI)","Welch t-test, p < 0.01",tb,partial
+Privacy-utility trade-off,eps <= 1.5,eps = 1.2 (utility > 98.7%),"KL divergence, p < 0.05",tb,partial
+Convergence efficiency,<= 10 epochs,8 epochs (delta = 1e-3),"KS test, p < 0.05",tb,partial
+Client dropout resilience,>= 95%,97.3% (up to 20% dropout),"chi-squared GoF, p < 0.01",tb,partial
+Adversarial robustness,>= 95%,96.8% (GAN-crafted queries),"Mann-Whitney U, p < 0.01",tb,partial

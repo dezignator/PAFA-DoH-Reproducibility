@@ -1,0 +1,6 @@
+phase,Rule-based (static thresholds),"Statistical (Mahalanobis, benign only)",Supervised ML (trained on tunnel+beacon),"TDA (persistence, delay-embedded IAT)","SNN (LIF + STDP, benign-trained)","PAFA fusion (stat + TDA + SNN, max)"
+"stealth set-up (h1-4, mimic)",0.0%,1.6%,0.0%,24.0%,0.0%,10.6%
+"C2 beaconing (h5-7, beacon)",0.0%,100.0%,100.0%,0.0%,0.0%,100.0%
+"query-flood exfiltration (h8-11, tunnel)",100.0%,100.0%,100.0%,5.0%,100.0%,100.0%
+"subdomain enumeration (h12-14, enum)",0.0%,100.0%,0.0%,6.1%,1.8%,100.0%
+benign false-alarm rate (all hours),1.7%,0.0%,0.9%,1.7%,2.4%,0.8%

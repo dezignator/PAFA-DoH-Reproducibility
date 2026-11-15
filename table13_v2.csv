@@ -1,0 +1,4 @@
+metric,loihi,gpu_a100,gain,evidence,sw_repro,section
+Inference latency,0.8 ms,2.1 ms,2.6x,hw,no,"4.12, 4.25"
+Energy per inference,0.12 mJ,1.8 mJ,15x,hw,no,4.25
+Spike encoding efficiency,0.45 bits/spike,n/a,n/a,tb,partial,"4.27.4, 4.29.1"

@@ -1,0 +1,7 @@
+countermeasure,total noise sd,||s||/||n|| (Eq. 47),ratio reduction,n=25,n=50,n=100,n=200,n=400,n=800,n=1600,n=3200
+none (measurement noise only),1.00,1.414,0.0%,0.98,1.00,1.00,1.00,1.00,1.00,1.00,1.00
+"static injection, amplitude x2.5",2.69,0.525,62.9%,0.25,0.53,0.95,1.00,1.00,1.00,1.00,1.00
+"static injection, amplitude x8",8.06,0.175,87.6%,0.00,0.05,0.10,0.33,0.57,0.93,1.00,1.00
+"static injection, amplitude x25",25.02,0.057,96.0%,0.00,0.00,0.02,0.00,0.03,0.12,0.17,0.68
+"static injection, amplitude x50",50.01,0.028,98.0%,0.00,0.00,0.00,0.00,0.00,0.02,0.02,0.12
+"SNN-adaptive: x50 while T(t)~1, x2.5 otherwise",50.01 (alert) / 2.69 (idle),0.028 (alert),98.0% (alert),0.00 (alert),0.00 (alert),0.02 (alert),0.00 (alert),0.00 (alert),0.00 (alert),0.00 (alert),0.10 (alert)
